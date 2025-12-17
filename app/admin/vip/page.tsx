@@ -169,7 +169,7 @@ export default function AdminVip() {
               <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
                 <Upload size={24} className="text-gray-400 mr-2" />
                 <span className="text-gray-600 dark:text-gray-400">
-                  Clicca per caricare un'immagine
+                  Clicca per caricare un&apos;immagine
                 </span>
                 <input
                   type="file"
