@@ -23,7 +23,13 @@ export async function GET(request: NextRequest) {
     })
 
     // Converti l'ID numerico in stringa per compatibilità con il frontend
-    const formattedPosts = posts.map(post => ({
+    const formattedPosts = posts.map((post: {
+      id: number
+      imageUrl: string
+      description: string
+      title: string | null
+      createdAt: Date
+    }) => ({
       id: post.id.toString(),
       imageUrl: post.imageUrl,
       description: post.description,
