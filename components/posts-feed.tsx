@@ -57,6 +57,30 @@ export function PostsFeed() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="max-w-4xl mx-auto">
+        {/* Show cooking section */}
+        <section className="mb-10 md:mb-12">
+          <div className="bg-white/90 dark:bg-gray-900/90 rounded-2xl shadow-md overflow-hidden flex flex-col md:flex-row">
+            <div className="relative w-full md:w-1/3 h-40 md:h-48">
+              <Image
+                src="/show-coocking.png"
+                alt="Show cooking di Piero Giammanco"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="flex-1 p-4 md:p-6">
+              <h3 className="text-lg md:text-xl font-semibold text-amber-200 dark:text-white mb-2">
+                Show cooking a vista
+              </h3>
+              <p className="text-sm md:text-base text-amber-200 dark:text-gray-300 leading-relaxed">
+                Nello spazio esterno del ristorante, Piero – il titolare – cucina a vista per i suoi
+                ospiti, diventando un vero punto di riferimento. Con lo show cooking regala
+                bellissime esperienze e condivide le sue ricette direttamente davanti ai clienti.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-amber-200 dark:text-white">
           Il post del giorno
         </h2>

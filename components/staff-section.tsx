@@ -156,7 +156,9 @@ export function StaffSection() {
               Ignazio Orofino
             </h3>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-center">
-              Vice direttore, soprannominato &quot;Occhio vivo&quot;, vigila su ogni tavolo per garantire un servizio rapido, cordiale e impeccabile.
+              Vice direttore, soprannominato &quot;Occhio vivo&quot;, è il vero personaggio del ristorante:
+              mantiene la clientela sempre attiva e coinvolta, vigilando su ogni tavolo per garantire
+              un servizio rapido, cordiale e impeccabile.
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
