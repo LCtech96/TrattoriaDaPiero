@@ -10,6 +10,12 @@ export default function MapsPage() {
     process.env.NEXT_PUBLIC_MAPS_URL ||
     'https://maps.app.goo.gl/Dqj5484ZEMdB9cA7A'
 
+  // URL di embed per mostrare l'anteprima dentro il sito.
+  // Puoi sovrascriverlo con NEXT_PUBLIC_MAPS_EMBED_URL se vuoi usare un link "Incorpora mappa" di Google.
+  const embedUrl =
+    process.env.NEXT_PUBLIC_MAPS_EMBED_URL ||
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3188.552994812529!2d13.3208!3d38.2033!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1319f7c6d9e7e0d3%3A0x0000000000000000!2sTrattoria%20Da%20Piero%20Mondello!5e0!3m2!1sit!2sit!4v1700000000000!5m2!1sit!2sit'
+
   return (
     <main className="min-h-screen">
       <Navigation />
@@ -25,11 +31,11 @@ export default function MapsPage() {
             </Link>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-gray-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6 text-amber-200 dark:text-white">
             Dove Siamo
           </h1>
 
-          <p className="text-center text-gray-700 dark:text-gray-300 mb-6">
+          <p className="text-center text-amber-200 dark:text-gray-300 mb-6">
             Guarda la posizione della Trattoria Da Piero sulla mappa e tocca per
             aprire direttamente in Google Maps.
           </p>
@@ -43,7 +49,7 @@ export default function MapsPage() {
             >
               <div className="relative w-full aspect-[4/3] bg-gray-200 dark:bg-gray-800">
                 <iframe
-                  src={mapsUrl}
+                  src={embedUrl}
                   loading="lazy"
                   className="w-full h-full pointer-events-none"
                   referrerPolicy="no-referrer-when-downgrade"

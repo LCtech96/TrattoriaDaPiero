@@ -41,7 +41,7 @@ export function RestaurantDescription() {
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto -mt-4 md:-mt-6">
         <p 
           className="text-base md:text-lg text-amber-200 dark:text-gray-300 leading-relaxed text-center"
           dangerouslySetInnerHTML={{ __html: desc1 }}

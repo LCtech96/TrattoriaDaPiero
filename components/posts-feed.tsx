@@ -57,9 +57,14 @@ export function PostsFeed() {
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-          Il Piatto del Giorno
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-2 text-amber-200 dark:text-white">
+          Il post del giorno
         </h2>
+        {posts[0] && (
+          <p className="text-center text-xs md:text-sm text-amber-200/90 dark:text-gray-400 mb-6">
+            Data di pubblicazione: {new Date(posts[0].createdAt).toLocaleDateString('it-IT')}
+          </p>
+        )}
         <div className="space-y-8">
           {posts.map((post) => (
             <article

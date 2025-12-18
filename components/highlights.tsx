@@ -31,18 +31,17 @@ export function Highlights() {
               key={highlight.id}
               onClick={() => setActiveHighlight(isActive ? null : highlight.id)}
               className={cn(
-                'flex flex-col items-center gap-1 p-2 rounded-full transition-all',
-                'bg-white/90 dark:bg-gray-800/90',
+                'rounded-full overflow-hidden transition-all',
                 'border-2 border-transparent',
                 isActive && 'ring-2 ring-amber-500 dark:ring-amber-400 scale-105',
                 'hover:scale-105 active:scale-95'
               )}
               style={{
-                width: '72px',
-                height: '72px',
+                width: '80px',
+                height: '80px',
               }}
             >
-              <div className="relative w-8 h-8 rounded-full overflow-hidden">
+              <div className="relative w-full h-full">
                 <Image
                   src={highlight.imageSrc}
                   alt={highlight.label}
@@ -50,14 +49,6 @@ export function Highlights() {
                   className="object-cover"
                 />
               </div>
-              <span
-                className={cn(
-                  'text-[10px] font-semibold text-center text-gray-800 dark:text-gray-200 leading-tight',
-                  isActive && 'text-amber-700 dark:text-amber-300'
-                )}
-              >
-                {highlight.label}
-              </span>
             </button>
           )
         })}

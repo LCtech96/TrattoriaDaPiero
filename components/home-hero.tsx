@@ -192,8 +192,8 @@ export function HomeHero() {
       </div>
 
       {/* Profile Section */}
-      <div className="container mx-auto px-4 -mt-24 md:-mt-28 relative z-10">
-        <div className="flex flex-col md:flex-row items-start md:items-end gap-4 md:gap-6">
+      <div className="container mx-auto px-4 -mt-28 md:-mt-32 relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-end gap-3 md:gap-6">
           {/* Restaurant Info */}
           <div className="flex-1 pb-1 md:pb-2 order-2 md:order-1">
             <EditableText

@@ -79,17 +79,17 @@ export function StaffSection() {
     <div className="max-w-4xl mx-auto space-y-12">
       {/* Restaurant Description */}
       <section className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl font-bold text-amber-200 dark:text-white mb-4">
           Trattoria Da Piero
         </h2>
-        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+        <p className="text-amber-200 dark:text-gray-300 leading-relaxed">
           La Trattoria Da Piero nasce dalla passione per la cucina siciliana e il desiderio 
           di offrire ai nostri ospiti un&apos;esperienza culinaria autentica e indimenticabile. 
           Situata sul lungomare Mondello, il nostro ristorante unisce la tradizione 
           della cucina siciliana con un ambiente caratteristico, creando un menu che celebra 
           i sapori del territorio.
         </p>
-        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">
+        <p className="text-amber-200 dark:text-gray-300 leading-relaxed mt-4">
           Con vista mare e vicino alla spiaggia, la Trattoria Da Piero accoglie ogni giorno 
           chi desidera gustare l&apos;eccellenza della cucina siciliana in un ambiente elegante 
           e accogliente, perfetto per un pranzo veloce o una cena romantica.
