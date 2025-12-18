@@ -180,79 +180,40 @@ export default function AdminImages() {
           </div>
         </div>
 
-        {/* Items List */}
+        {/* Items List - sola visualizzazione, nessuna modifica immagini */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredItems.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col gap-3"
             >
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
                 {item.name}
               </h3>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Immagine piatto
-                </label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        handleFileSelect(item.id, file)
-                      }
-                    }}
-                    className="hidden"
-                    id={`image-${item.id}`}
-                  />
-                  <label
-                    htmlFor={`image-${item.id}`}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-                  >
-                    <Upload size={16} />
-                    Carica e ritaglia immagine
-                  </label>
-                  {itemImages[item.id] && (
-                    <div className="mt-2">
-                      <div className="text-sm text-green-600 dark:text-green-400 mb-2">
-                        ✓ Immagine caricata
-                      </div>
-                      <img
-                        src={itemImages[item.id]}
-                        alt={item.name}
-                        className="w-full h-32 object-cover rounded-lg"
-                        loading="lazy"
-                        decoding="async"
-                        crossOrigin="anonymous"
-                        onError={(e) => {
-                          console.error('Error loading preview image for item', item.id)
-                          e.currentTarget.style.display = 'none'
-                        }}
-                        style={{ 
-                          display: 'block',
-                          maxWidth: '100%',
-                          height: 'auto'
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Le immagini di questo piatto sono gestite direttamente nel menu esterno.
+                Non sono modificabili da questo pannello.
+              </p>
+              {itemImages[item.id] && (
+                <img
+                  src={itemImages[item.id]}
+                  alt={item.name}
+                  className="w-full h-32 object-cover rounded-lg opacity-80 pointer-events-none select-none"
+                  loading="lazy"
+                  decoding="async"
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('Error loading preview image for item', item.id)
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      {croppingImage && (
-        <ImageCropper
-          image={croppingImage}
-          onCropComplete={handleCropComplete}
-          onCancel={handleCancelCrop}
-          aspectRatio={1}
-        />
-      )}
+      {/* Editor immagini piatti disabilitato: niente cropper */}
     </div>
   )
 }

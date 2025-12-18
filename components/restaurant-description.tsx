@@ -43,15 +43,15 @@ export function RestaurantDescription() {
     <div className="container mx-auto px-4 py-8 md:py-12">
       <div className="max-w-3xl mx-auto">
         <p 
-          className="text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed text-center"
+          className="text-base md:text-lg text-amber-200 dark:text-gray-300 leading-relaxed text-center"
           dangerouslySetInnerHTML={{ __html: desc1 }}
         />
         <p 
-          className="text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed text-center mt-4"
+          className="text-base md:text-lg text-amber-200 dark:text-gray-300 leading-relaxed text-center mt-4"
           dangerouslySetInnerHTML={{ __html: desc2 }}
         />
         <p 
-          className="text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed text-center mt-4"
+          className="text-base md:text-lg text-amber-200 dark:text-gray-300 leading-relaxed text-center mt-4"
           dangerouslySetInnerHTML={{ __html: desc3 }}
         />
       </div>

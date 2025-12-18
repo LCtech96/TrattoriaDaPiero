@@ -192,7 +192,7 @@ export function HomeHero() {
       </div>
 
       {/* Profile Section */}
-      <div className="container mx-auto px-4 -mt-20 md:-mt-28 relative z-10">
+      <div className="container mx-auto px-4 -mt-24 md:-mt-28 relative z-10">
         <div className="flex flex-col md:flex-row items-start md:items-end gap-4 md:gap-6">
           {/* Restaurant Info */}
           <div className="flex-1 pb-1 md:pb-2 order-2 md:order-1">
@@ -216,11 +216,8 @@ export function HomeHero() {
                 window.dispatchEvent(new Event('storage'))
               }}
               tag="p"
-              className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-1"
+              className="text-sm md:text-base text-amber-200 dark:text-gray-400 mb-1"
             />
-            <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300">
-              Il tuo punto di riferimento tra i ristoranti a Mondello.
-            </p>
           </div>
           
           {/* Profile Image */}
