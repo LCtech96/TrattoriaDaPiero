@@ -134,9 +134,9 @@ export default function AdminVip() {
       <div className="container mx-auto px-4 py-8">
         <Link
           href="/admin"
-          className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600 mb-6 transition-colors text-sm font-semibold"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
           <span>Indietro</span>
         </Link>
 

@@ -216,7 +216,7 @@ export function HomeHero() {
                 window.dispatchEvent(new Event('storage'))
               }}
               tag="p"
-              className="text-sm md:text-base text-amber-200 dark:text-gray-400 mb-1"
+              className="text-sm md:text-base font-semibold text-amber-200 dark:text-amber-300 mb-1"
             />
           </div>
           
