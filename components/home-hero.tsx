@@ -14,6 +14,16 @@ export function HomeHero() {
   const coverBlobUrlRef = useRef<string | null>(null)
   const profileBlobUrlRef = useRef<string | null>(null)
 
+  const normalizeCover = (url: string) => {
+    if (!url || url === '/cover-image.png') return '/copertina.png'
+    return url
+  }
+
+  const normalizeProfile = (url: string) => {
+    if (!url || url === '/profile-image.png') return '/profilo.png'
+    return url
+  }
+
   const loadImages = async () => {
     try {
       // Carica cover image dal database
@@ -21,7 +31,7 @@ export function HomeHero() {
       if (coverResponse.ok) {
         const coverData = await coverResponse.json()
         if (coverData.imageUrl) {
-          const savedCover = coverData.imageUrl
+          const savedCover = normalizeCover(coverData.imageUrl)
           localStorage.setItem('cover_image', savedCover)
           
           if (isAndroid() && savedCover.startsWith('data:image')) {
@@ -54,10 +64,10 @@ export function HomeHero() {
             coverBlobUrlRef.current = blobUrl
             setCoverImage(blobUrl)
           } else {
-            setCoverImage(savedCover)
+            setCoverImage(normalizeCover(savedCover))
           }
         } else {
-          setCoverImage(savedCover)
+          setCoverImage(normalizeCover(savedCover))
         }
       }
     }
@@ -68,7 +78,7 @@ export function HomeHero() {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         if (profileData.imageUrl) {
-          const savedProfile = profileData.imageUrl
+          const savedProfile = normalizeProfile(profileData.imageUrl)
           localStorage.setItem('profile_image', savedProfile)
           
           if (isAndroid() && savedProfile.startsWith('data:image')) {
@@ -101,10 +111,10 @@ export function HomeHero() {
             profileBlobUrlRef.current = blobUrl
             setProfileImage(blobUrl)
           } else {
-            setProfileImage(savedProfile)
+            setProfileImage(normalizeProfile(savedProfile))
           }
         } else {
-          setProfileImage(savedProfile)
+          setProfileImage(normalizeProfile(savedProfile))
         }
       }
     }
