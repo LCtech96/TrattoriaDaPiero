@@ -60,12 +60,12 @@ export function PostsFeed() {
         {/* Show cooking section */}
         <section className="mb-10 md:mb-12">
           <div className="bg-white/90 dark:bg-gray-900/90 rounded-2xl shadow-md overflow-hidden flex flex-col md:flex-row">
-            <div className="relative w-full md:w-1/3 h-40 md:h-48">
+            <div className="relative w-full md:w-1/3 h-52 md:h-60 bg-black">
               <Image
                 src="/show-coocking.png"
                 alt="Show cooking di Piero Giammanco"
                 fill
-                className="object-cover"
+                className="object-contain"
               />
             </div>
             <div className="flex-1 p-4 md:p-6">
