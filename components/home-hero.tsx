@@ -8,8 +8,9 @@ import { base64ToBlobUrl, isAndroid } from '@/lib/utils'
 export function HomeHero() {
   const [restaurantName, setRestaurantName] = useState('Trattoria Da Piero')
   const [restaurantSubtitle, setRestaurantSubtitle] = useState('Specialità Mondello')
-  const [coverImage, setCoverImage] = useState('/cover-image.png')
-  const [profileImage, setProfileImage] = useState('/profile-image.png')
+  // Immagini di default prese dalla cartella public
+  const [coverImage, setCoverImage] = useState('/copertina.png')
+  const [profileImage, setProfileImage] = useState('/profilo.png')
   const coverBlobUrlRef = useRef<string | null>(null)
   const profileBlobUrlRef = useRef<string | null>(null)
 
@@ -160,7 +161,7 @@ export function HomeHero() {
             crossOrigin="anonymous"
             onError={(e) => {
               console.error('Error loading cover image')
-              e.currentTarget.src = '/cover-image.png'
+              e.currentTarget.src = '/copertina.png'
             }}
             style={{ 
               display: 'block',
@@ -181,10 +182,39 @@ export function HomeHero() {
       </div>
 
       {/* Profile Section */}
-      <div className="container mx-auto px-4 -mt-16 md:-mt-24 relative z-10">
+      <div className="container mx-auto px-4 -mt-20 md:-mt-28 relative z-10">
         <div className="flex flex-col md:flex-row items-start md:items-end gap-4 md:gap-6">
+          {/* Restaurant Info */}
+          <div className="flex-1 pb-1 md:pb-2 order-2 md:order-1">
+            <EditableText
+              value={restaurantName}
+              onSave={(v) => {
+                setRestaurantName(v)
+                localStorage.setItem('content_restaurant_name', v)
+                // Trigger custom event for same-tab updates
+                window.dispatchEvent(new Event('storage'))
+              }}
+              tag="h1"
+              className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2"
+            />
+            <EditableText
+              value={restaurantSubtitle}
+              onSave={(v) => {
+                setRestaurantSubtitle(v)
+                localStorage.setItem('content_restaurant_subtitle', v)
+                // Trigger custom event for same-tab updates
+                window.dispatchEvent(new Event('storage'))
+              }}
+              tag="p"
+              className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-1"
+            />
+            <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300">
+              Il tuo punto di riferimento tra i ristoranti a Mondello.
+            </p>
+          </div>
+          
           {/* Profile Image */}
-          <div className="relative w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-lg">
+          <div className="relative w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-white dark:border-gray-900 bg-white dark:bg-gray-900 overflow-hidden shadow-lg order-1 md:order-2">
             {profileImage.startsWith('data:') ? (
               <img
                 src={profileImage}
@@ -195,7 +225,7 @@ export function HomeHero() {
                 crossOrigin="anonymous"
                 onError={(e) => {
                   console.error('Error loading profile image')
-                  e.currentTarget.src = '/profile-image.png'
+                  e.currentTarget.src = '/profilo.png'
                 }}
                 style={{ 
                   display: 'block',
@@ -212,32 +242,6 @@ export function HomeHero() {
                 className="object-cover"
               />
             )}
-          </div>
-
-          {/* Restaurant Info */}
-          <div className="flex-1 pb-4">
-            <EditableText
-              value={restaurantName}
-              onSave={(v) => {
-                setRestaurantName(v)
-                localStorage.setItem('content_restaurant_name', v)
-                // Trigger custom event for same-tab updates
-                window.dispatchEvent(new Event('storage'))
-              }}
-              tag="h1"
-              className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2"
-            />
-            <EditableText
-              value={restaurantSubtitle}
-              onSave={(v) => {
-                setRestaurantSubtitle(v)
-                localStorage.setItem('content_restaurant_subtitle', v)
-                // Trigger custom event for same-tab updates
-                window.dispatchEvent(new Event('storage'))
-              }}
-              tag="p"
-              className="text-sm md:text-base text-gray-600 dark:text-gray-400 mb-4"
-            />
           </div>
         </div>
       </div>

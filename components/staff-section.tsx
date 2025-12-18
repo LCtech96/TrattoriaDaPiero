@@ -6,9 +6,9 @@ import { base64ToBlobUrl, isAndroid } from '@/lib/utils'
 
 export function StaffSection() {
   const [ownerImage, setOwnerImage] = useState<string | null>(null)
-  const [ownerName, setOwnerName] = useState<string>('Fabio Mezzapelle')
+  const [ownerName, setOwnerName] = useState<string>('Piero Giammanco')
   const [ownerDescription, setOwnerDescription] = useState<string>(
-    'Fabio Mezzapelle, titolare della Trattoria Da Piero, porta avanti con passione la tradizione culinaria siciliana. La sua dedizione alla qualità e all\'autenticità si riflette in ogni piatto che esce dalla nostra cucina.'
+    "Piero Giammanco, titolare e chef della Trattoria Da Piero, porta avanti con passione la tradizione culinaria siciliana. La sua dedizione alla qualità e all'autenticità si riflette in ogni piatto che esce dalla nostra cucina."
   )
 
   useEffect(() => {
@@ -104,15 +104,15 @@ export function StaffSection() {
         <div className="flex flex-col md:flex-row gap-6">
           <div className="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0 mx-auto md:mx-0 overflow-hidden relative">
             <Image
-              src="/titolare-image.png"
-              alt="Fabio Mezzapelle"
+              src="/titolare.png"
+              alt="Piero Giammanco - Titolare e Chef"
               fill
               className="object-cover"
             />
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Fabio Mezzapelle
+              Piero Giammanco
             </h3>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
               {ownerDescription}
@@ -126,11 +126,11 @@ export function StaffSection() {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
           Il Nostro Staff
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 overflow-hidden relative">
               <Image
-                src="/Direttore-Di-Sala-image.png"
+                src="/direttore.png"
                 alt="Fabio Mezzapelle"
                 fill
                 className="object-cover"
@@ -140,13 +140,13 @@ export function StaffSection() {
               Fabio Mezzapelle
             </h3>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-center">
-              Direttore di Sala
+              Direttore di sala, punto di riferimento dell&apos;accoglienza, coordina il servizio con eleganza e attenzione ad ogni dettaglio.
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 overflow-hidden relative">
               <Image
-                src="/Vice-Direttore.png"
+                src="/vice.png"
                 alt="Ignazio Orofino"
                 fill
                 className="object-cover"
@@ -156,7 +156,23 @@ export function StaffSection() {
               Ignazio Orofino
             </h3>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-center">
-              Vice Direttore - &quot;Occhio Vivo&quot;
+              Vice direttore, soprannominato &quot;Occhio vivo&quot;, vigila su ogni tavolo per garantire un servizio rapido, cordiale e impeccabile.
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 overflow-hidden relative">
+              <Image
+                src="/tony.png"
+                alt='Tony Nicolosi "Koreano"'
+                fill
+                className="object-cover"
+              />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center">
+              Tony Nicolosi
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-center">
+              Chef, detto &quot;Koreano&quot;, è il motore della cucina: coordina la brigata con energia e cura, portando in tavola piatti sempre precisi e ricchi di gusto.
             </p>
           </div>
         </div>

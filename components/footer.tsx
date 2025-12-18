@@ -3,10 +3,15 @@
 import { Facebook, Instagram, Mail, Phone } from 'lucide-react'
 
 export function Footer() {
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+393276976442'
-  const email = process.env.NEXT_PUBLIC_EMAIL || 'trattoriadapiero@mondello.it'
-  const facebookUrl = process.env.NEXT_PUBLIC_FACEBOOK_URL || ''
-  const instagramUrl = process.env.NEXT_PUBLIC_INSTAGRAM_URL || ''
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+393200738966'
+  const landlineNumber = process.env.NEXT_PUBLIC_PHONE_NUMBER || '091450747'
+  const email = process.env.NEXT_PUBLIC_EMAIL || 'giammanco.pietro@hotmail.it'
+  const facebookUrl =
+    process.env.NEXT_PUBLIC_FACEBOOK_URL ||
+    'https://www.facebook.com/share/1DLhw7PCf1/?mibextid=wwXIfr'
+  const instagramUrl =
+    process.env.NEXT_PUBLIC_INSTAGRAM_URL ||
+    'https://www.instagram.com/trattoria_da_piero_mondello?igsh=YWNmbWR1N2Z0dTJ0&utm_source=qr'
 
   return (
     <footer className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-20 md:mt-32 pb-20 md:pb-8">
@@ -29,6 +34,15 @@ export function Footer() {
             <Mail size={24} />
             <span className="hidden md:inline">{email}</span>
             <span className="md:hidden">Email</span>
+          </a>
+
+          <a
+            href={`tel:${landlineNumber.replace(/[^0-9]/g, '')}`}
+            className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <Phone size={24} />
+            <span className="hidden md:inline">{landlineNumber}</span>
+            <span className="md:hidden">Telefono</span>
           </a>
           
           <a
