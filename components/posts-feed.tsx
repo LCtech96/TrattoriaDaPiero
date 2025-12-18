@@ -69,10 +69,10 @@ export function PostsFeed() {
               />
             </div>
             <div className="flex-1 p-4 md:p-6">
-              <h3 className="text-lg md:text-xl font-semibold text-amber-200 dark:text-white mb-2">
+              <h3 className="text-lg md:text-xl font-semibold text-amber-700 dark:text-white mb-2">
                 Show cooking a vista
               </h3>
-              <p className="text-sm md:text-base text-amber-200 dark:text-gray-300 leading-relaxed">
+              <p className="text-sm md:text-base text-gray-800 dark:text-gray-300 leading-relaxed">
                 Nello spazio esterno del ristorante, Piero – il titolare – cucina a vista per i suoi
                 ospiti, diventando un vero punto di riferimento. Con lo show cooking regala
                 bellissime esperienze e condivide le sue ricette direttamente davanti ai clienti.
