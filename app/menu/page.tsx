@@ -2,6 +2,13 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
+import { MenuList } from '@/components/menu-list'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Menù | Trattoria da Piero Mondello',
+  description: 'Scopri il menù completo della Trattoria da Piero: antipasti, primi, risotti, secondi, insalate, dolci, bevande e cocktail.',
+}
 
 export default function MenuPage() {
   return (
@@ -16,24 +23,13 @@ export default function MenuPage() {
             <ArrowLeft size={18} />
             <span>Indietro</span>
           </Link>
-          <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
-              Il Nostro Menù
-            </h1>
-            <div className="max-w-2xl mx-auto">
-              <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
-                Visualizza il nostro menù completo
-              </p>
-              <a
-                href="https://amavery.com/menu/trattoria-da-piero/21/?vm=T"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-              >
-                Apri il Menù
-              </a>
-            </div>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center text-gray-900 dark:text-white">
+            Il Nostro Menù
+          </h1>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+            Il menù può variare in base al pescato giornaliero, pescato nel golfo di Mondello e Isola delle Femmine.
+          </p>
+          <MenuList />
         </div>
       </div>
       <Footer />
