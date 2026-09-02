@@ -23,12 +23,14 @@ export default function MenuPage() {
             <ArrowLeft size={18} />
             <span>Indietro</span>
           </Link>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center text-gray-900 dark:text-white">
-            Il Nostro Menù
-          </h1>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-            Il menù può variare in base al pescato giornaliero, pescato nel golfo di Mondello e Isola delle Femmine.
-          </p>
+          <div className="content-surface p-6 md:p-8 mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center text-gray-900 dark:text-white drop-shadow-sm">
+              Il Nostro Menù
+            </h1>
+            <p className="text-center text-gray-800 dark:text-gray-200 mb-0 max-w-2xl mx-auto text-base leading-relaxed">
+              Il menù può variare in base al pescato giornaliero, pescato nel golfo di Mondello e Isola delle Femmine.
+            </p>
+          </div>
           <MenuList />
         </div>
       </div>

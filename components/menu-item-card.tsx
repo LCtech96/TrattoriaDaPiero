@@ -183,7 +183,7 @@ export function MenuItemCard({ item }: MenuItemCardProps) {
             </div>
           </div>
           {item.description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
               {item.description}
             </p>
           )}
