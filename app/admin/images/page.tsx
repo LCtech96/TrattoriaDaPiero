@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { menuItems, categories } from '@/data/menu-data'
 import { ImageCropper } from '@/components/image-cropper'
 import { optimizeBase64Image } from '@/lib/utils'
+import { checkAdminSession } from '@/lib/admin-session'
 
 export default function AdminImages() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -55,11 +56,17 @@ export default function AdminImages() {
   }, [])
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('adminAuth')
-    if (auth !== 'true') {
-      router.push('/admin/login')
-    } else {
-      setIsAuthenticated(true)
+    let cancelled = false
+    checkAdminSession().then((ok) => {
+      if (cancelled) return
+      if (!ok) {
+        router.push('/admin/login')
+      } else {
+          setIsAuthenticated(true)
+      }
+    })
+    return () => {
+      cancelled = true
     }
   }, [router])
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Edit2, Check, X } from 'lucide-react'
+import { checkAdminSession } from '@/lib/admin-session'
 
 interface EditableTextProps {
   value: string
@@ -24,8 +25,13 @@ export function EditableText({
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('adminAuth')
-    setIsAdmin(auth === 'true')
+    let cancelled = false
+    checkAdminSession().then((ok) => {
+      if (!cancelled) setIsAdmin(ok)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {

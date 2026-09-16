@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import { EditableText } from '@/components/editable-text'
+import { checkAdminSession } from '@/lib/admin-session'
 
 export default function AdminContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -20,23 +21,29 @@ export default function AdminContent() {
   const [desc3, setDesc3] = useState('Ogni piatto racconta la storia della Sicilia, con ingredienti freschi e ricette che celebrano le <strong>tradizioni locali</strong>. Venite a trovarci in questo <strong>luogo tipico siciliano</strong> sul <strong>lungomare Mondello</strong> per un\'esperienza gastronomica indimenticabile.')
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('adminAuth')
-    if (auth !== 'true') {
-      router.push('/admin/login')
-    } else {
-      setIsAuthenticated(true)
-      // Load saved content
-      const savedName = localStorage.getItem('content_restaurant_name')
-      const savedSubtitle = localStorage.getItem('content_restaurant_subtitle')
-      const savedDesc1 = localStorage.getItem('content_desc1')
-      const savedDesc2 = localStorage.getItem('content_desc2')
-      const savedDesc3 = localStorage.getItem('content_desc3')
+    let cancelled = false
+    checkAdminSession().then((ok) => {
+      if (cancelled) return
+      if (!ok) {
+        router.push('/admin/login')
+      } else {
+          setIsAuthenticated(true)
+          // Load saved content
+          const savedName = localStorage.getItem('content_restaurant_name')
+          const savedSubtitle = localStorage.getItem('content_restaurant_subtitle')
+          const savedDesc1 = localStorage.getItem('content_desc1')
+          const savedDesc2 = localStorage.getItem('content_desc2')
+          const savedDesc3 = localStorage.getItem('content_desc3')
       
-      if (savedName) setRestaurantName(savedName)
-      if (savedSubtitle) setRestaurantSubtitle(savedSubtitle)
-      if (savedDesc1) setDesc1(savedDesc1)
-      if (savedDesc2) setDesc2(savedDesc2)
-      if (savedDesc3) setDesc3(savedDesc3)
+          if (savedName) setRestaurantName(savedName)
+          if (savedSubtitle) setRestaurantSubtitle(savedSubtitle)
+          if (savedDesc1) setDesc1(savedDesc1)
+          if (savedDesc2) setDesc2(savedDesc2)
+          if (savedDesc3) setDesc3(savedDesc3)
+      }
+    })
+    return () => {
+      cancelled = true
     }
   }, [router])
 

@@ -1,25 +1,44 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Lock, Mail } from 'lucide-react'
 
-export default function AdminLogin() {
+function AdminLoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setIsSubmitting(true)
 
-    if (email === 'giammanco.pietro@hotmail.it' && password === '123456789Pietro') {
-      // Store auth in sessionStorage
-      sessionStorage.setItem('adminAuth', 'true')
-      router.push('/admin')
-    } else {
-      setError('Credenziali non valide')
+    try {
+      // La verifica avviene sul server: il browser non vede mai la password
+      // attesa e riceve solo un cookie di sessione httpOnly.
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        setError(data.error || 'Credenziali non valide')
+        return
+      }
+
+      const next = searchParams.get('next')
+      router.push(next && next.startsWith('/admin') ? next : '/admin')
+      router.refresh()
+    } catch {
+      setError('Errore di connessione. Riprova.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -39,6 +58,7 @@ export default function AdminLogin() {
               <input
                 type="email"
                 value={email}
+                autoComplete="username"
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
@@ -54,6 +74,7 @@ export default function AdminLogin() {
               <input
                 type="password"
                 value={password}
+                autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
@@ -67,9 +88,10 @@ export default function AdminLogin() {
           )}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60"
           >
-            Accedi
+            {isSubmitting ? 'Accesso in corso…' : 'Accedi'}
           </button>
         </form>
       </div>
@@ -77,5 +99,10 @@ export default function AdminLogin() {
   )
 }
 
-
-
+export default function AdminLogin() {
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginForm />
+    </Suspense>
+  )
+}

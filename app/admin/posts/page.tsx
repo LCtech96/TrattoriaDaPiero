@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ImageCropper } from '@/components/image-cropper'
 import { optimizeBase64Image } from '@/lib/utils'
 import Image from 'next/image'
+import { checkAdminSession } from '@/lib/admin-session'
 
 interface Post {
   id: string
@@ -25,12 +26,18 @@ export default function AdminPosts() {
   const router = useRouter()
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('adminAuth')
-    if (auth !== 'true') {
-      router.push('/admin/login')
-    } else {
-      setIsAuthenticated(true)
-      loadPosts()
+    let cancelled = false
+    checkAdminSession().then((ok) => {
+      if (cancelled) return
+      if (!ok) {
+        router.push('/admin/login')
+      } else {
+          setIsAuthenticated(true)
+          loadPosts()
+      }
+    })
+    return () => {
+      cancelled = true
     }
   }, [router])
 

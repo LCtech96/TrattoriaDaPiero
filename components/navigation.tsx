@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, Users, MapPin, Moon, Sun, Star } from 'lucide-react'
+import { Menu, Users, MapPin, Moon, Sun, Star, ShoppingBag } from 'lucide-react'
 import { useThemeStore } from '@/store/theme-store'
 import { useCartStore } from '@/store/cart-store'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,7 @@ export function Navigation() {
     { href: '/chi-siamo', label: 'Chi siamo', icon: Users },
     { href: '/maps', label: 'Maps', icon: MapPin },
     { href: '/vip', label: 'VIP', icon: Star },
+    { href: '/ecommerce', label: 'Shop', icon: ShoppingBag },
   ]
 
   return (
@@ -69,7 +70,7 @@ export function Navigation() {
 
       {/* Mobile Navigation - Bottom */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
-        <div className="flex items-center justify-around py-2">
+        <div className="flex items-center justify-around py-2 overflow-x-auto">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href

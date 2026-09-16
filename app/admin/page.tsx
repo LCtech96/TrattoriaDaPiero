@@ -2,25 +2,33 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, Image as ImageIcon, FileText, PlusSquare } from 'lucide-react'
+import { LogOut, Image as ImageIcon, FileText, PlusSquare, ShoppingBag, Receipt } from 'lucide-react'
 import Link from 'next/link'
+import { checkAdminSession, adminLogout } from '@/lib/admin-session'
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    const auth = sessionStorage.getItem('adminAuth')
-    if (auth !== 'true') {
-      router.push('/admin/login')
-    } else {
-      setIsAuthenticated(true)
+    let cancelled = false
+    checkAdminSession().then((ok) => {
+      if (cancelled) return
+      if (!ok) {
+        router.push('/admin/login')
+      } else {
+        setIsAuthenticated(true)
+      }
+    })
+    return () => {
+      cancelled = true
     }
   }, [router])
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('adminAuth')
+  const handleLogout = async () => {
+    await adminLogout()
     router.push('/admin/login')
+    router.refresh()
   }
 
   if (!isAuthenticated) {
@@ -106,6 +114,34 @@ export default function AdminPanel() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
               Aggiungi e gestisci le foto dei VIP che hanno visitato il ristorante
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/ecommerce"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+          >
+            <ShoppingBag size={48} className="text-teal-600 dark:text-teal-400 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              E-commerce - Prodotti
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Carica, modifica ed elimina prodotti: titolo, descrizione, prezzo,
+              quantita, misure e foto
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/ecommerce/ordini"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+          >
+            <Receipt size={48} className="text-rose-600 dark:text-rose-400 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              E-commerce - Ordini e Pagamenti
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Consulta gli ordini ricevuti, i pagamenti Stripe e registra incassi
+              in contanti o bonifico
             </p>
           </Link>
         </div>

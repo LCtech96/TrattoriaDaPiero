@@ -11,46 +11,46 @@ datasource db {
 }
 
 model Category {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   order       Int
   description String?
   items       MenuItem[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model MenuItem {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  price       Float
-  categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id])
-  ingredients String[] // Array of ingredients
-  allergens   String[] // Array of allergens
-  isVegan     Boolean  @default(false)
-  isGlutenFree Boolean @default(false)
-  isBestSeller Boolean @default(false)
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String
+  price        Float
+  categoryId   Int
+  category     Category @relation(fields: [categoryId], references: [id])
+  ingredients  String[] // Array of ingredients
+  allergens    String[] // Array of allergens
+  isVegan      Boolean  @default(false)
+  isGlutenFree Boolean  @default(false)
+  isBestSeller Boolean  @default(false)
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model CartItem {
-  id          String   @id @default(uuid())
-  menuItemId Int
-  quantity    Int      @default(1)
+  id             String          @id @default(uuid())
+  menuItemId     Int
+  quantity       Int             @default(1)
   customizations Customization[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Customization {
   id         String   @id @default(uuid())
   cartItemId String
   cartItem   CartItem @relation(fields: [cartItemId], references: [id], onDelete: Cascade)
-  type       String   // "add" or "remove"
+  type       String // "add" or "remove"
   ingredient String
   createdAt  DateTime @default(now())
 }
@@ -74,12 +74,12 @@ model Admin {
 }
 
 model Content {
-  id          String   @id @default(uuid())
-  key         String   @unique
-  value       String
-  type        String   // 'text', 'image', 'description'
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  type      String // 'text', 'image', 'description'
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }
 
 model Post {
@@ -92,10 +92,113 @@ model Post {
 }
 
 model Vip {
-  id          Int      @id @default(autoincrement())
-  imageUrl    String
-  title       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  imageUrl  String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+// ============================================================
+// E-COMMERCE
+// ============================================================
+
+model Product {
+  id                Int         @id @default(autoincrement())
+  slug              String      @unique
+  name              String
+  description       String      @default("")
+  // Prezzo in centesimi di euro (es. 1250 = 12,50 €). Evita gli errori
+  // di arrotondamento dei float ed è il formato richiesto da Stripe.
+  priceCents        Int
+  // Prezzo barrato per le promozioni (sempre in centesimi), opzionale.
+  comparePriceCents Int?
+  currency          String      @default("EUR")
+  // Quantità disponibile a magazzino.
+  stock             Int         @default(0)
+  // Misura/formato mostrato in vetrina: "500 g", "75 cl", "1 kg", ...
+  unit              String?
+  // Peso in grammi, usato per le spese di spedizione.
+  weightGrams       Int?
+  sku               String?
+  category          String      @default("Prodotti")
+  imageUrl          String?
+  images            String[]    @default([])
+  isActive          Boolean     @default(true)
+  isFeatured        Boolean     @default(false)
+  sortOrder         Int         @default(0)
+  orderItems        OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Order {
+  id                    Int         @id @default(autoincrement())
+  orderNumber           String      @unique
+  customerName          String
+  customerEmail         String
+  customerPhone         String?
+  shippingAddress       String?
+  notes                 String?
+  subtotalCents         Int
+  shippingCents         Int         @default(0)
+  totalCents            Int
+  currency              String      @default("EUR")
+  // pending | paid | shipped | cancelled | refunded
+  status                String      @default("pending")
+  // pending | paid | failed | refunded
+  paymentStatus         String      @default("pending")
+  // stripe | contanti | bonifico | pos
+  paymentMethod         String?
+  stripeSessionId       String?     @unique
+  stripePaymentIntentId String?
+  // Evita di scalare il magazzino due volte se il webhook arriva più volte.
+  stockApplied          Boolean     @default(false)
+  items                 OrderItem[]
+  payments              Payment[]
+  paidAt                DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id             Int      @id @default(autoincrement())
+  orderId        Int
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      Int?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // Copia dei dati del prodotto al momento dell'ordine: se il prodotto
+  // cambia prezzo o viene eliminato, lo storico resta corretto.
+  name           String
+  unit           String?
+  unitPriceCents Int
+  quantity       Int
+  totalCents     Int
+  createdAt      DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amountCents Int
+  currency    String   @default("EUR")
+  // stripe | contanti | bonifico | pos
+  provider    String
+  // Riferimento esterno (id PaymentIntent Stripe, CRO del bonifico, ...)
+  providerRef String?
+  // succeeded | pending | failed | refunded
+  status      String   @default("succeeded")
+  notes       String?
+  paidAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([paidAt])
+}
