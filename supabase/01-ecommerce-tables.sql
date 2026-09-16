@@ -66,8 +66,10 @@ END
 $$;
 
 UPDATE "Product" SET "name" = 'Prodotto ' || "id" WHERE "name" IS NULL OR btrim("name") = '';
--- Slug leggibile ricavato dal nome ("Cassata siciliana" -> "cassata-siciliana"),
--- con ripiego sull'id se il nome non produce niente di utilizzabile.
+-- Slug leggibile ricavato dal nome ("Cassata siciliana" -> "cassata-siciliana").
+-- Vale sia per gli slug mancanti sia per i segnaposto "prodotto-<id>" lasciati
+-- da un'esecuzione precedente di questo script: sono URL generati in
+-- automatico, non scelti a mano, quindi si possono migliorare.
 UPDATE "Product"
 SET "slug" = btrim(
       regexp_replace(
@@ -76,8 +78,16 @@ SET "slug" = btrim(
           'aaaaaaeeeeiiiiooooouuuucn')),
         '[^a-z0-9]+', '-', 'g'),
       '-')
-WHERE "slug" IS NULL OR btrim("slug") = '';
+WHERE ("slug" IS NULL OR btrim("slug") = '' OR "slug" = 'prodotto-' || "id")
+  AND btrim(
+        regexp_replace(
+          lower(translate("name",
+            'àáâãäåèéêëìíîïòóôõöùúûüçñ',
+            'aaaaaaeeeeiiiiooooouuuucn')),
+          '[^a-z0-9]+', '-', 'g'),
+        '-') <> '';
 
+-- Ripiego sull'id per i nomi che non producono nessun carattere utilizzabile.
 UPDATE "Product" SET "slug" = 'prodotto-' || "id" WHERE "slug" IS NULL OR btrim("slug") = '';
 
 ALTER TABLE "Product"
