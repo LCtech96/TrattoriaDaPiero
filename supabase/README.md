@@ -4,10 +4,30 @@
 
 Apri Supabase → **SQL Editor** → **New query**, incolla ed esegui:
 
+0. `00-diagnostica.sql` — *facoltativo*: mostra cosa c'è già nel database. Non modifica niente.
 1. `01-ecommerce-tables.sql` — crea le tabelle `Product`, `Order`, `OrderItem`, `Payment`.
 2. `02-security-fixes.sql` — chiude le vulnerabilità segnalate via email dal Security Advisor.
 
-Entrambi gli script sono idempotenti: rilanciarli non causa danni.
+Gli script sono idempotenti: rilanciarli non causa danni.
+
+Se il SQL Editor mostra **"Potential issue detected — this query creates tables
+without enabling Row Level Security"** mentre esegui il file 01, scegli pure
+**"Run without RLS"**: la RLS viene attivata subito dopo dal file 02.
+
+### Se avevi già una tabella Product (o Order, OrderItem, Payment)
+
+Succede se in passato hai eseguito altri script SQL. Il file 01 se ne accorge:
+invece di fallire, **aggiunge le colonne mancanti** alla tabella esistente
+senza toccare i dati già presenti, generando `slug` e `name` per le righe
+vecchie (e riusando una colonna `title`/`nome` se c'è). Le righe recuperate
+compaiono nel pannello admin con prezzo 0 e quantità 0: vanno completate a
+mano o eliminate.
+
+Alla fine il file 01 segnala eventuali colonne residue obbligatorie e senza
+default, che sono le uniche che possono ancora bloccare gli inserimenti.
+
+**L'ordine conta**: se esegui il file 01 dopo il 02, rilancia il 02, altrimenti
+le tabelle nuove restano senza RLS.
 
 ## Perché arrivavano le email di vulnerabilità
 

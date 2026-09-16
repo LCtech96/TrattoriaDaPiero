@@ -20,11 +20,9 @@
 --     proprietario delle tabelle, che non è soggetto a RLS.
 --  2. Revoca i permessi di "anon" e "authenticated" su tabelle, sequenze e
 --     funzioni: seconda barriera, nel caso una policy venga aggiunta per errore.
---  3. Blocca i privilegi di default, così le tabelle create in futuro
---     nascono già chiuse.
---  4. Fissa il search_path delle funzioni di "public" (avviso
+--  3. Fissa il search_path delle funzioni di "public" (avviso
 --     "function_search_path_mutable").
---  5. Elenca a fine script quello che resta da sistemare a mano.
+--  4. Elenca a fine script quello che resta da sistemare a mano.
 --
 -- ATTENZIONE: esegui questo script solo se l'applicazione parla con il
 -- database via Prisma/connessione Postgres diretta (è il caso di questo
@@ -68,39 +66,52 @@ $$;
 
 -- ---------------------------------------------------------------------
 -- 2. Revoca dei permessi ai ruoli pubblici dell'API
+--    (e privilegi di default, così le tabelle future nascono già chiuse)
 -- ---------------------------------------------------------------------
-REVOKE ALL ON ALL TABLES    IN SCHEMA public FROM anon, authenticated;
-REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM anon, authenticated;
+-- I ruoli anon/authenticated esistono sempre su Supabase, ma non su un
+-- Postgres normale: il blocco li tocca solo se ci sono davvero, così lo
+-- script gira anche su un database di prova senza andare in errore.
+DO $$
+DECLARE
+  target TEXT;
+BEGIN
+  FOREACH target IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = target) THEN
+      EXECUTE format('REVOKE ALL ON ALL TABLES    IN SCHEMA public FROM %I;', target);
+      EXECUTE format('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM %I;', target);
+      EXECUTE format('REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM %I;', target);
 
--- "anon" non deve nemmeno poter elencare gli oggetti dello schema.
-REVOKE USAGE ON SCHEMA public FROM anon;
+      -- Privilegi di default: le tabelle create in futuro nascono già chiuse.
+      EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM %I;', target);
+      EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM %I;', target);
+      EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM %I;', target);
+
+      -- Stessa cosa per gli oggetti creati dal ruolo postgres (quello di Prisma).
+      IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'postgres') THEN
+        EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM %I;', target);
+        EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM %I;', target);
+        EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTIONS FROM %I;', target);
+      END IF;
+
+      RAISE NOTICE 'Permessi revocati al ruolo %', target;
+    ELSE
+      RAISE NOTICE 'Ruolo % non presente su questo database: nulla da revocare', target;
+    END IF;
+  END LOOP;
+
+  -- "anon" non deve nemmeno poter elencare gli oggetti dello schema.
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+    EXECUTE 'REVOKE USAGE ON SCHEMA public FROM anon;';
+  END IF;
+END
+$$;
 
 -- Il ruolo PUBLIC eredita permessi a chiunque: togliamo anche quelli.
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC;
 
 
 -- ---------------------------------------------------------------------
--- 3. Privilegi di default: le tabelle future nascono già chiuse
--- ---------------------------------------------------------------------
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-  REVOKE ALL ON TABLES FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-  REVOKE ALL ON SEQUENCES FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-  REVOKE ALL ON FUNCTIONS FROM anon, authenticated;
-
--- Stessa cosa per gli oggetti creati dal ruolo postgres (quello usato da Prisma).
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE ALL ON TABLES FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE ALL ON SEQUENCES FROM anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE ALL ON FUNCTIONS FROM anon, authenticated;
-
-
--- ---------------------------------------------------------------------
--- 4. search_path fisso sulle funzioni (avviso function_search_path_mutable)
+-- 3. search_path fisso sulle funzioni (avviso function_search_path_mutable)
 -- ---------------------------------------------------------------------
 -- Una funzione senza search_path fisso può essere dirottata: chi riesce a
 -- creare un oggetto in uno schema che precede "public" nel search_path del
@@ -127,7 +138,7 @@ $$;
 
 
 -- ---------------------------------------------------------------------
--- 5. Viste SECURITY DEFINER (avviso security_definer_view)
+-- 4. Viste SECURITY DEFINER (avviso security_definer_view)
 -- ---------------------------------------------------------------------
 -- Una vista SECURITY DEFINER gira con i permessi di chi l'ha creata e
 -- aggira la RLS di chi la interroga. Qui le elenchiamo soltanto: vanno
@@ -158,7 +169,7 @@ $$;
 
 
 -- ---------------------------------------------------------------------
--- 6. Verifica finale
+-- 5. Verifica finale
 -- ---------------------------------------------------------------------
 -- Dopo l'esecuzione questa query non deve restituire NESSUNA riga.
 SELECT
