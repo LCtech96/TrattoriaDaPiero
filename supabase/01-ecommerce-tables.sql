@@ -66,6 +66,18 @@ END
 $$;
 
 UPDATE "Product" SET "name" = 'Prodotto ' || "id" WHERE "name" IS NULL OR btrim("name") = '';
+-- Slug leggibile ricavato dal nome ("Cassata siciliana" -> "cassata-siciliana"),
+-- con ripiego sull'id se il nome non produce niente di utilizzabile.
+UPDATE "Product"
+SET "slug" = btrim(
+      regexp_replace(
+        lower(translate("name",
+          'àáâãäåèéêëìíîïòóôõöùúûüçñ',
+          'aaaaaaeeeeiiiiooooouuuucn')),
+        '[^a-z0-9]+', '-', 'g'),
+      '-')
+WHERE "slug" IS NULL OR btrim("slug") = '';
+
 UPDATE "Product" SET "slug" = 'prodotto-' || "id" WHERE "slug" IS NULL OR btrim("slug") = '';
 
 ALTER TABLE "Product"
@@ -146,6 +158,79 @@ ALTER TABLE "Payment" ALTER COLUMN "orderId" SET NOT NULL;
 
 
 -- ---------------------------------------------------------------------
+-- COMPATIBILITÀ CON COLONNE DI STRUTTURE PRECEDENTI
+-- ---------------------------------------------------------------------
+-- Se la tabella Product arrivava da uno script precedente può avere una
+-- colonna "price" (euro, virgola mobile). Recuperiamo quei prezzi dentro
+-- priceCents, così i prodotti già inseriti non partono da 0.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'Product' AND column_name = 'price'
+  ) THEN
+    EXECUTE 'UPDATE "Product" SET "priceCents" = round("price" * 100)::int
+             WHERE "priceCents" = 0 AND "price" IS NOT NULL AND "price" > 0';
+    RAISE NOTICE 'Prezzi recuperati dalla vecchia colonna "price" dentro "priceCents"';
+  END IF;
+END
+$$;
+
+-- Le colonne residue obbligatorie e senza default (per esempio "price")
+-- farebbero fallire ogni inserimento del sito, che non le valorizza.
+-- Le rendiamo facoltative: i dati restano, ma smettono di bloccare.
+DO $$
+DECLARE
+  c RECORD;
+  expected TEXT[] := ARRAY[
+    'id','slug','name','description','priceCents','comparePriceCents','currency',
+    'stock','unit','weightGrams','sku','category','imageUrl','images','isActive',
+    'isFeatured','sortOrder','createdAt','updatedAt',
+    'orderNumber','customerName','customerEmail','customerPhone','shippingAddress',
+    'notes','subtotalCents','shippingCents','totalCents','status','paymentStatus',
+    'paymentMethod','stripeSessionId','stripePaymentIntentId','stockApplied','paidAt',
+    'orderId','productId','unitPriceCents','quantity','amountCents','provider','providerRef'
+  ];
+BEGIN
+  FOR c IN
+    SELECT table_name, column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name IN ('Product', 'Order', 'OrderItem', 'Payment')
+      AND is_nullable = 'NO'
+      AND column_default IS NULL
+      AND is_identity = 'NO'
+      AND NOT (column_name = ANY (expected))
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ALTER COLUMN %I DROP NOT NULL;',
+                   c.table_name, c.column_name);
+    RAISE NOTICE 'Colonna residua %.% resa facoltativa', c.table_name, c.column_name;
+  END LOOP;
+END
+$$;
+
+-- All'opposto: alcune colonne dello schema del sito potrebbero essere
+-- rimaste nullable da una struttura precedente. Il sito le legge come
+-- sempre valorizzate, quindi un NULL in "description" o "images" farebbe
+-- fallire la lettura della vetrina. Le riempiamo e le rendiamo obbligatorie.
+UPDATE "Product" SET "description" = '' WHERE "description" IS NULL;
+UPDATE "Product" SET "images" = ARRAY[]::TEXT[] WHERE "images" IS NULL;
+UPDATE "Product" SET "createdAt" = CURRENT_TIMESTAMP WHERE "createdAt" IS NULL;
+UPDATE "Product" SET "updatedAt" = CURRENT_TIMESTAMP WHERE "updatedAt" IS NULL;
+
+ALTER TABLE "Product"
+  ALTER COLUMN "description" SET DEFAULT '',
+  ALTER COLUMN "description" SET NOT NULL,
+  ALTER COLUMN "images"      SET DEFAULT ARRAY[]::TEXT[],
+  ALTER COLUMN "images"      SET NOT NULL,
+  ALTER COLUMN "currency"    SET DEFAULT 'EUR',
+  ALTER COLUMN "createdAt"   SET DEFAULT CURRENT_TIMESTAMP,
+  ALTER COLUMN "createdAt"   SET NOT NULL,
+  ALTER COLUMN "updatedAt"   SET DEFAULT CURRENT_TIMESTAMP,
+  ALTER COLUMN "updatedAt"   SET NOT NULL;
+
+
+-- ---------------------------------------------------------------------
 -- INDICI
 -- ---------------------------------------------------------------------
 -- Eventuali duplicati preesistenti renderebbero impossibile l'indice unico
@@ -191,47 +276,38 @@ $$;
 -- ---------------------------------------------------------------------
 -- CONTROLLO FINALE
 -- ---------------------------------------------------------------------
--- Segnala le colonne che NON fanno parte dello schema del sito ma che sono
--- obbligatorie e senza valore di default: residui di strutture precedenti,
--- bloccherebbero gli inserimenti e vanno rimossi o resi nullable a mano.
-DO $$
-DECLARE
-  c RECORD;
-  found BOOLEAN := false;
-  expected TEXT[] := ARRAY[
-    'id','slug','name','description','priceCents','comparePriceCents','currency',
-    'stock','unit','weightGrams','sku','category','imageUrl','images','isActive',
-    'isFeatured','sortOrder','createdAt','updatedAt',
-    'orderNumber','customerName','customerEmail','customerPhone','shippingAddress',
-    'notes','subtotalCents','shippingCents','totalCents','status','paymentStatus',
-    'paymentMethod','stripeSessionId','stripePaymentIntentId','stockApplied','paidAt',
-    'orderId','productId','unitPriceCents','quantity','amountCents','provider','providerRef'
-  ];
-BEGIN
-  FOR c IN
-    SELECT table_name, column_name
-    FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND table_name IN ('Product', 'Order', 'OrderItem', 'Payment')
-      AND is_nullable = 'NO'
-      AND column_default IS NULL
-      AND is_identity = 'NO'
-      AND NOT (column_name = ANY (expected))
-  LOOP
-    found := true;
-    RAISE NOTICE 'DA CONTROLLARE: %.% e obbligatoria e senza default: e una colonna residua, non fa parte dello schema del sito',
-      c.table_name, c.column_name;
-  END LOOP;
-  IF NOT found THEN
-    RAISE NOTICE 'Struttura a posto: nessuna colonna residua problematica.';
-  END IF;
-END
-$$;
+-- Il SQL Editor di Supabase non mostra i messaggi NOTICE, quindi i controlli
+-- finali sono normali SELECT: quello che conta si legge nei risultati.
 
--- Deve elencare le 4 tabelle con tutte le colonne attese.
-SELECT table_name, count(*) AS numero_colonne
+-- CONTROLLO 1: deve restituire ZERO righe.
+-- Elenca colonne residue di strutture precedenti che sono obbligatorie e
+-- senza default: bloccherebbero gli inserimenti del sito.
+SELECT
+  table_name  AS tabella,
+  column_name AS colonna_da_sistemare,
+  'obbligatoria e senza default: bloccherebbe gli inserimenti' AS problema
 FROM information_schema.columns
 WHERE table_schema = 'public'
   AND table_name IN ('Product', 'Order', 'OrderItem', 'Payment')
-GROUP BY table_name
-ORDER BY table_name;
+  AND is_nullable = 'NO'
+  AND column_default IS NULL
+  AND is_identity = 'NO'
+  AND column_name NOT IN (
+    'id','slug','name','orderNumber','orderId','description','priceCents',
+    'currency','stock','category','isActive','isFeatured','sortOrder',
+    'createdAt','updatedAt','images','customerName','customerEmail',
+    'subtotalCents','shippingCents','totalCents','status','paymentStatus',
+    'stockApplied','unitPriceCents','quantity','amountCents','provider'
+  );
+
+-- CONTROLLO 2: riepilogo dei prodotti recuperati da strutture precedenti.
+-- Quelli con prezzo 0 vanno completati o eliminati dal pannello admin.
+SELECT
+  "id",
+  "name"  AS titolo,
+  "slug",
+  round("priceCents" / 100.0, 2) AS prezzo_euro,
+  "stock" AS quantita,
+  "isActive" AS in_vetrina
+FROM "Product"
+ORDER BY "id";

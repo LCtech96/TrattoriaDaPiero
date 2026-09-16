@@ -23,8 +23,15 @@ vecchie (e riusando una colonna `title`/`nome` se c'è). Le righe recuperate
 compaiono nel pannello admin con prezzo 0 e quantità 0: vanno completate a
 mano o eliminate.
 
-Alla fine il file 01 segnala eventuali colonne residue obbligatorie e senza
-default, che sono le uniche che possono ancora bloccare gli inserimenti.
+Il file 01 recupera anche i prezzi da un'eventuale vecchia colonna `price`
+(in euro) dentro `priceCents`, genera slug leggibili dai nomi e rende
+facoltative le colonne residue obbligatorie — come `price` — che altrimenti
+bloccherebbero ogni inserimento del sito.
+
+Alla fine mostra due tabelle di risultati: la prima **deve essere vuota**
+(elenca le colonne che restano problematiche), la seconda riepiloga i
+prodotti recuperati. I prodotti con prezzo 0 vanno completati o eliminati
+dal pannello admin.
 
 **L'ordine conta**: se esegui il file 01 dopo il 02, rilancia il 02, altrimenti
 le tabelle nuove restano senza RLS.

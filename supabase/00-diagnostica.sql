@@ -29,18 +29,14 @@ WHERE table_schema = 'public'
 ORDER BY table_name, ordinal_position;
 
 -- 3. Quante righe contengono (per capire se sono dati veri o tabelle vuote).
-DO $$
-DECLARE
-  t TEXT;
-  n BIGINT;
-BEGIN
-  FOREACH t IN ARRAY ARRAY['Product', 'Order', 'OrderItem', 'Payment'] LOOP
-    IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = t) THEN
-      EXECUTE format('SELECT count(*) FROM public.%I', t) INTO n;
-      RAISE NOTICE 'Tabella % : % righe', t, n;
-    ELSE
-      RAISE NOTICE 'Tabella % : non esiste', t;
-    END IF;
-  END LOOP;
-END
-$$;
+--    Il SQL Editor di Supabase non mostra i messaggi NOTICE, quindi il
+--    conteggio arriva come tabella di risultati.
+SELECT
+  c.relname AS tabella,
+  (SELECT n_live_tup FROM pg_stat_user_tables t WHERE t.relid = c.oid) AS righe_circa
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public'
+  AND c.relkind = 'r'
+  AND c.relname IN ('Product', 'Order', 'OrderItem', 'Payment')
+ORDER BY c.relname;
