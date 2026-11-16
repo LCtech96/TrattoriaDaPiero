@@ -1,9 +1,11 @@
-import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
+import { PageShell } from '@/components/page-shell'
 import { HomeHero } from '@/components/home-hero'
 import { Highlights } from '@/components/highlights'
 import { RestaurantDescription } from '@/components/restaurant-description'
 import { PostsFeed } from '@/components/posts-feed'
+import { ShowCooking } from '@/components/show-cooking'
+import { VipTeaser } from '@/components/vip-teaser'
+import { VisitSection } from '@/components/visit-section'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 
@@ -28,7 +30,11 @@ const restaurantSchema = {
   '@type': 'Restaurant',
   name: 'Trattoria da Piero',
   url: 'https://trattoriadapieromondello.site',
-  image: 'https://www.instagram.com/trattoria_da_piero_mondello?igsh=YWNmbWR1N2Z0dTJ0&utm_source=qr',
+  image: 'https://trattoriadapieromondello.site/copertina.png',
+  sameAs: [
+    'https://www.instagram.com/trattoria_da_piero_mondello',
+    'https://www.facebook.com/share/1DLhw7PCf1/',
+  ],
   telephone: ['091450747', '3200738966'],
   priceRange: '€€',
   address: {
@@ -107,22 +113,15 @@ export default function Home() {
           __html: JSON.stringify(restaurantSchema),
         }}
       />
-      <main className="min-h-screen">
-        <Navigation />
-      <div className="pt-16 md:pt-20">
+      <PageShell>
         <HomeHero />
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 text-gray-900 dark:text-white">
-            Il tuo punto di riferimento tra i ristoranti a Mondello
-          </h1>
-        </div>
         <Highlights />
         <RestaurantDescription />
+        <ShowCooking />
+        <VipTeaser />
         <PostsFeed />
-      </div>
-      <Footer />
-    </main>
+        <VisitSection />
+      </PageShell>
     </>
   )
 }
-

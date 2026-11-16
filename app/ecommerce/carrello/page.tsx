@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Minus, Plus, Trash2 } from 'lucide-react'
-import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
+import { PageShell } from '@/components/page-shell'
 import { formatPrice } from '@/lib/ecommerce'
 import { useShopCartStore } from '@/store/shop-cart-store'
 
@@ -78,30 +77,30 @@ function ShopCartPage() {
   }
 
   return (
-    <main className="min-h-screen">
-      <Navigation />
-      <div className="pt-16 md:pt-20 pb-20 md:pb-8">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-            Carrello E-commerce
+    <PageShell>
+      <div>
+        <div className="container py-10 sm:py-14 max-w-4xl">
+          <p className="eyebrow mb-4 flex justify-center">Shop online</p>
+          <h1 className="display text-center mb-10 text-maiolica-900 dark:text-cream-50">
+            Il tuo carrello
           </h1>
 
           {info && (
-            <div className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 p-4 rounded-lg mb-6">
+            <div className="rounded-2xl bg-emerald-50 p-4 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-200 mb-6">
               {info}
             </div>
           )}
 
           {!hydrated ? (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-12">Caricamento…</p>
+            <p className="text-center text-ink-muted dark:text-cream-200/60 py-12">Caricamento…</p>
           ) : items.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-lg text-ink-soft dark:text-cream-200/70 mb-4">
                 Il carrello è vuoto.
               </p>
               <Link
                 href="/ecommerce"
-                className="inline-block px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold"
+                className="btn-primary"
               >
                 Vai alla vetrina
               </Link>
@@ -112,39 +111,39 @@ function ShopCartPage() {
                 {items.map((item) => (
                   <div
                     key={item.productId}
-                    className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-lg shadow p-3"
+                    className="flex items-center gap-3 card p-3"
                   >
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-cream-100 dark:bg-maiolica-950 flex-shrink-0">
                       {item.imageUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-white truncate">
+                      <p className="font-semibold text-maiolica-900 dark:text-cream-50 truncate">
                         {item.name}
                       </p>
                       {item.unit && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{item.unit}</p>
+                        <p className="text-xs text-ink-muted dark:text-cream-200/60">{item.unit}</p>
                       )}
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <p className="text-sm text-ink-soft dark:text-cream-200/70">
                         {formatPrice(item.priceCents)}
                       </p>
                     </div>
-                    <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg">
+                    <div className="flex items-center border border-cream-300 dark:border-white/15 rounded-full">
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                        className="p-1.5 text-gray-700 dark:text-gray-300"
+                        className="p-1.5 text-ink-soft dark:text-cream-200/80"
                         aria-label="Riduci quantità"
                       >
                         <Minus size={16} />
                       </button>
-                      <span className="w-8 text-center text-sm text-gray-900 dark:text-white">
+                      <span className="w-8 text-center text-sm text-maiolica-900 dark:text-cream-50">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                        className="p-1.5 text-gray-700 dark:text-gray-300"
+                        className="p-1.5 text-ink-soft dark:text-cream-200/80"
                         aria-label="Aumenta quantità"
                       >
                         <Plus size={16} />
@@ -161,30 +160,30 @@ function ShopCartPage() {
                 ))}
               </div>
 
-              <div className="flex justify-between items-center text-xl font-bold text-gray-900 dark:text-white mb-8">
+              <div className="flex justify-between items-center text-xl font-bold text-maiolica-900 dark:text-cream-50 mb-8">
                 <span>Totale</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
 
-              <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <form onSubmit={handleSubmit} className="card p-5 sm:p-8 space-y-4">
+                <h2 className="font-serif text-2xl text-maiolica-900 dark:text-cream-50">
                   I tuoi dati
                 </h2>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <label className="block">
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <span className="label">
                       Nome e cognome *
                     </span>
                     <input
                       required
                       value={form.customerName}
                       onChange={(e) => setForm({ ...form, customerName: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                     />
                   </label>
                   <label className="block">
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <span className="label">
                       Email *
                     </span>
                     <input
@@ -192,46 +191,46 @@ function ShopCartPage() {
                       type="email"
                       value={form.customerEmail}
                       onChange={(e) => setForm({ ...form, customerEmail: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                     />
                   </label>
                   <label className="block">
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <span className="label">
                       Telefono
                     </span>
                     <input
                       type="tel"
                       value={form.customerPhone}
                       onChange={(e) => setForm({ ...form, customerPhone: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                     />
                   </label>
                   <label className="block">
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <span className="label">
                       Indirizzo di spedizione
                     </span>
                     <input
                       value={form.shippingAddress}
                       onChange={(e) => setForm({ ...form, shippingAddress: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                     />
                   </label>
                 </div>
 
                 <label className="block">
-                  <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <span className="label">
                     Note per l&apos;ordine
                   </span>
                   <textarea
                     rows={3}
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </label>
 
                 {error && (
-                  <div className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 p-3 rounded-lg text-sm">
+                  <div className="rounded-xl bg-red-50 p-3 text-red-700 dark:bg-red-500/10 dark:text-red-300 text-sm">
                     {error}
                   </div>
                 )}
@@ -239,11 +238,11 @@ function ShopCartPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors disabled:opacity-60"
+                  className="btn-primary w-full"
                 >
                   {isSubmitting ? 'Attendi…' : `Paga ${formatPrice(subtotal)}`}
                 </button>
-                <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-center text-ink-muted dark:text-cream-200/60">
                   Il pagamento avviene su pagina sicura Stripe. Eventuali spese di spedizione
                   vengono mostrate prima della conferma.
                 </p>
@@ -252,8 +251,7 @@ function ShopCartPage() {
           )}
         </div>
       </div>
-      <Footer />
-    </main>
+    </PageShell>
   )
 }
 

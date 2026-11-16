@@ -2,44 +2,172 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  color: #000000;
-  background: #ffffff;
-  position: relative;
-  font-weight: 600;
-  /* Font leggibile ma elegante */
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+:root {
+  --background: #fbf6ec;
+  --foreground: #18202f;
+  --header-h: 4rem;
+  --mobile-bar-h: 4.25rem;
 }
 
-/* Sfondo sfocato con overlay per migliorare il contrasto del testo */
-body::before {
-  content: '';
-  position: fixed;
-  inset: -12px;
-  z-index: -1;
-  background-image: linear-gradient(
-      rgba(0, 0, 0, 0.55),
-      rgba(0, 0, 0, 0.55)
-    ),
-    url('/sfondo.png');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  filter: blur(6px);
-  transform: scale(1.03);
+@media (min-width: 1024px) {
+  :root {
+    --header-h: 4.75rem;
+    --mobile-bar-h: 0px;
+  }
+}
+
+.dark {
+  --background: #0a1428;
+  --foreground: #f6eedd;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+  }
+
+  body {
+    @apply bg-cream text-ink antialiased font-sans dark:bg-maiolica-950 dark:text-cream-100;
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif tracking-tight;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    @apply bg-limone-300 text-maiolica-950;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-limone-400 ring-offset-2 ring-offset-cream dark:ring-offset-maiolica-950;
+  }
+
+  img {
+    -webkit-user-drag: none;
+  }
+}
+
+@layer components {
+  /* Layout */
+  .section {
+    @apply py-16 md:py-24;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-arancia-600 dark:text-limone-300;
+  }
+
+  .eyebrow::before {
+    content: '';
+    @apply block h-px w-6 bg-current opacity-70;
+  }
+
+  .display {
+    @apply font-serif text-4xl leading-[1.05] sm:text-5xl lg:text-6xl;
+  }
+
+  .heading {
+    @apply font-serif text-3xl leading-tight sm:text-4xl;
+  }
+
+  .lead {
+    @apply text-base leading-relaxed text-ink-soft sm:text-lg dark:text-cream-200/80;
+  }
+
+  /* Superfici */
+  .card {
+    @apply rounded-2xl border border-cream-200/80 bg-cream-50 shadow-soft dark:border-white/10 dark:bg-maiolica-900;
+  }
+
+  .content-surface {
+    @apply card;
+  }
+
+  /* Bottoni */
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-maiolica-700 text-cream-50 shadow-soft hover:bg-maiolica-800 dark:bg-limone-400 dark:text-maiolica-950 dark:hover:bg-limone-300;
+  }
+
+  .btn-accent {
+    @apply btn bg-limone-400 text-maiolica-950 shadow-soft hover:bg-limone-300;
+  }
+
+  .btn-outline {
+    @apply btn border border-maiolica-700/25 bg-transparent text-maiolica-800 hover:border-maiolica-700/50 hover:bg-maiolica-700/5 dark:border-cream-100/25 dark:text-cream-100 dark:hover:bg-white/5;
+  }
+
+  .btn-ghost-light {
+    @apply btn border border-white/40 bg-white/10 text-white backdrop-blur hover:bg-white/20;
+  }
+
+  /* Form */
+  .input {
+    @apply block w-full min-h-[44px] rounded-xl border border-cream-300/70 bg-white px-4 py-2.5 text-base text-ink placeholder:text-ink-muted shadow-sm transition focus:border-maiolica-500 focus:outline-none focus:ring-2 focus:ring-maiolica-500/30 dark:border-white/15 dark:bg-maiolica-950/60 dark:text-cream-100 dark:placeholder:text-cream-200/50;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink-soft dark:text-cream-200/80;
+  }
+
+  /* Chip / filtri */
+  .chip {
+    @apply inline-flex min-h-[40px] shrink-0 items-center whitespace-nowrap rounded-full border border-cream-300/80 bg-cream-50 px-4 text-sm font-medium text-ink-soft transition hover:border-maiolica-400 hover:text-maiolica-700 dark:border-white/15 dark:bg-maiolica-900 dark:text-cream-200 dark:hover:text-white;
+  }
+
+  .chip-active {
+    @apply border-maiolica-700 bg-maiolica-700 text-cream-50 hover:text-cream-50 dark:border-limone-400 dark:bg-limone-400 dark:text-maiolica-950 dark:hover:text-maiolica-950;
+  }
+
+  /* Fascia decorativa a maioliche */
+  .tile-band {
+    background-image: url('/sfondo.png');
+    background-size: 96px 96px;
+    background-repeat: repeat;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
-}
 
-@layer components {
-  .content-surface {
-    @apply bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-lg;
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .page-offset {
+    padding-top: var(--header-h);
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 
-
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

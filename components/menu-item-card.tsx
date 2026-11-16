@@ -1,208 +1,134 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
 import { type MenuItem } from '@/data/menu-data'
 import { formatPrice, base64ToBlobUrl, isAndroid } from '@/lib/utils'
-import { useCartStore } from '@/store/cart-store'
 import { MenuItemModal } from './menu-item-modal'
-import { Star, Leaf, AlertCircle } from 'lucide-react'
+import { Star, Leaf, WheatOff, Plus } from 'lucide-react'
 
 interface MenuItemCardProps {
   item: MenuItem
 }
 
-export function MenuItemCard({ item }: MenuItemCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [itemImage, setItemImage] = useState<string | null>(null)
+/** Foto del piatto caricata dall'admin: database -> cache localStorage. */
+function useMenuItemImage(itemId: number) {
+  const [image, setImage] = useState<string | null>(null)
   const blobUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
-    // Load image from database with localStorage fallback
-    const loadImage = async () => {
+    const apply = (url: string | null) => {
+      if (url && isAndroid() && url.startsWith('data:image')) {
+        const blobUrl = base64ToBlobUrl(url)
+        if (blobUrl) {
+          if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
+          blobUrlRef.current = blobUrl
+          setImage(blobUrl)
+          return
+        }
+      }
+      setImage(url)
+    }
+
+    const load = async () => {
       try {
-        // Prima prova a caricare dal database
-        const response = await fetch(`/api/images/menu-items/${item.id}`)
+        const response = await fetch(`/api/images/menu-items/${itemId}`)
         if (response.ok) {
           const data = await response.json()
           if (data.imageUrl) {
-            const imageUrl = data.imageUrl
-            // Salva in localStorage come cache
-            localStorage.setItem(`item_image_${item.id}`, imageUrl)
-            
-            // Per Android, prova a convertire in blob URL
-            if (isAndroid() && imageUrl.startsWith('data:image')) {
-              const blobUrl = base64ToBlobUrl(imageUrl)
-              if (blobUrl) {
-                // Pulisci il blob URL precedente se esiste
-                if (blobUrlRef.current) {
-                  URL.revokeObjectURL(blobUrlRef.current)
-                }
-                blobUrlRef.current = blobUrl
-                setItemImage(blobUrl)
-                return
-              }
-            }
-            setItemImage(imageUrl)
+            localStorage.setItem(`item_image_${itemId}`, data.imageUrl)
+            apply(data.imageUrl)
             return
           }
         }
-      } catch (error) {
-        console.error(`Error loading image for item ${item.id}:`, error)
+      } catch {
+        // si usa la cache
       }
-
-      // Fallback a localStorage
-      const savedImage = localStorage.getItem(`item_image_${item.id}`)
-      if (savedImage) {
-        // Per Android, prova a convertire in blob URL
-        if (isAndroid() && savedImage.startsWith('data:image')) {
-          const blobUrl = base64ToBlobUrl(savedImage)
-          if (blobUrl) {
-            // Pulisci il blob URL precedente se esiste
-            if (blobUrlRef.current) {
-              URL.revokeObjectURL(blobUrlRef.current)
-            }
-            blobUrlRef.current = blobUrl
-            setItemImage(blobUrl)
-          } else {
-            // Fallback a base64 se la conversione fallisce
-            setItemImage(savedImage)
-          }
-        } else {
-          setItemImage(savedImage)
-        }
-      } else {
-        setItemImage(null)
-      }
+      apply(localStorage.getItem(`item_image_${itemId}`))
     }
 
-    loadImage()
-
-    // Listen for storage changes
-    const handleStorageChange = () => {
-      loadImage()
-    }
-
-    // Listen for custom image update events
     const handleImageUpdate = (e: Event) => {
-      const customEvent = e as CustomEvent
-      if (customEvent.detail?.itemId === item.id) {
-        const imageUrl = customEvent.detail.imageUrl
-        // Per Android, converti in blob URL
-        if (isAndroid() && imageUrl.startsWith('data:image')) {
-          const blobUrl = base64ToBlobUrl(imageUrl)
-          if (blobUrl) {
-            if (blobUrlRef.current) {
-              URL.revokeObjectURL(blobUrlRef.current)
-            }
-            blobUrlRef.current = blobUrl
-            setItemImage(blobUrl)
-          } else {
-            setItemImage(imageUrl)
-          }
-        } else {
-          setItemImage(imageUrl)
-        }
-      }
+      const detail = (e as CustomEvent).detail
+      if (detail?.itemId === itemId) apply(detail.imageUrl)
     }
 
-    window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('focus', handleStorageChange)
+    load()
+    window.addEventListener('storage', load)
     window.addEventListener('imageUpdated', handleImageUpdate as EventListener)
-    
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('focus', handleStorageChange)
+      window.removeEventListener('storage', load)
       window.removeEventListener('imageUpdated', handleImageUpdate as EventListener)
-      // Pulisci blob URL quando il componente viene smontato
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current)
-      }
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
     }
-  }, [item.id])
+  }, [itemId])
+
+  return [image, setImage] as const
+}
+
+export function MenuItemCard({ item }: MenuItemCardProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [itemImage, setItemImage] = useMenuItemImage(item.id)
 
   return (
     <>
-      <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden cursor-pointer"
+      <button
+        type="button"
         onClick={() => setIsModalOpen(true)}
+        className="group flex w-full items-center gap-4 rounded-2xl p-3 text-left transition hover:bg-cream-100 dark:hover:bg-white/5 sm:p-4"
       >
-        {/* Item Image */}
         {itemImage && (
-          <div className="relative w-full h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+          <span className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-cream-200 dark:bg-maiolica-950 sm:h-24 sm:w-24">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={itemImage}
               alt={item.name}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               decoding="async"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                console.error('Error loading image for item', item.id)
-                // Su Android, prova a ricaricare da localStorage come base64
-                if (isAndroid()) {
-                  const savedImage = localStorage.getItem(`item_image_${item.id}`)
-                  if (savedImage && savedImage.startsWith('data:image')) {
-                    // Prova direttamente con base64 come fallback
-                    e.currentTarget.src = savedImage
-                  } else {
-                    e.currentTarget.style.display = 'none'
-                  }
-                } else {
-                  e.currentTarget.style.display = 'none'
-                }
-              }}
-              onLoad={() => {
-                // Immagine caricata con successo
-              }}
-              style={{ 
-                display: 'block',
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
+              onError={() => setItemImage(null)}
             />
-          </div>
+          </span>
         )}
-        
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex-1">
+
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline gap-3">
+            <span className="font-serif text-lg leading-snug text-maiolica-900 dark:text-cream-50 sm:text-xl">
               {item.name}
-            </h3>
-            <div className="flex gap-1 ml-2">
-              {item.isBestSeller && (
-                <Star size={16} className="text-yellow-500 fill-yellow-500" />
+              {(item.isBestSeller || item.isVegan || item.isGlutenFree) && (
+                <span className="ml-2 inline-flex translate-y-0.5 gap-1 align-baseline">
+                  {item.isBestSeller && <Star size={15} className="fill-limone-400 text-limone-500" aria-label="Best seller" />}
+                  {item.isVegan && <Leaf size={15} className="text-emerald-600" aria-label="Vegano" />}
+                  {item.isGlutenFree && <WheatOff size={15} className="text-maiolica-500" aria-label="Senza glutine" />}
+                </span>
               )}
-              {item.isVegan && (
-                <Leaf size={16} className="text-green-500" />
-              )}
-              {item.isGlutenFree && (
-                <AlertCircle size={16} className="text-blue-500" />
-              )}
-            </div>
-          </div>
-          {item.description && (
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
-              {item.description}
-            </p>
-          )}
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+            </span>
+            <span className="hidden min-w-[1.5rem] flex-1 translate-y-[-0.3rem] border-b border-dotted border-cream-300 dark:border-white/20 sm:block" aria-hidden />
+            <span className="ml-auto shrink-0 font-semibold tabular-nums text-arancia-600 dark:text-limone-300 sm:ml-0">
               {formatPrice(item.price)}
             </span>
-          </div>
-        </div>
-      </div>
+          </span>
+          {item.description && (
+            <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-ink-soft dark:text-cream-200/70">
+              {item.description}
+            </span>
+          )}
+        </span>
+
+        <span
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-cream-300 text-maiolica-700 transition group-hover:border-maiolica-700 group-hover:bg-maiolica-700 group-hover:text-cream-50 dark:border-white/15 dark:text-cream-100 dark:group-hover:border-limone-400 dark:group-hover:bg-limone-400 dark:group-hover:text-maiolica-950"
+          aria-hidden
+        >
+          <Plus size={16} />
+        </span>
+      </button>
 
       {isModalOpen && (
         <MenuItemModal
           item={item}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+          imageUrl={itemImage}
         />
       )}
     </>
   )
 }
-

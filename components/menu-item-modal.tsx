@@ -1,19 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Plus, Minus } from 'lucide-react'
+import { Plus, Minus, Leaf, Star, WheatOff } from 'lucide-react'
 import { type MenuItem } from '@/data/menu-data'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, cn } from '@/lib/utils'
 import { useCartStore } from '@/store/cart-store'
-import { cn } from '@/lib/utils'
+import { Sheet } from './sheet'
 
 interface MenuItemModalProps {
   item: MenuItem
   isOpen: boolean
   onClose: () => void
+  imageUrl?: string | null
 }
 
-// Common ingredients that can be added
+// Ingredienti comuni che si possono aggiungere
 const availableAdditions = [
   'pomodoro',
   'mozzarella',
@@ -28,13 +29,11 @@ const availableAdditions = [
   'panna',
 ]
 
-export function MenuItemModal({ item, isOpen, onClose }: MenuItemModalProps) {
+export function MenuItemModal({ item, isOpen, onClose, imageUrl }: MenuItemModalProps) {
   const [quantity, setQuantity] = useState(1)
   const [removedIngredients, setRemovedIngredients] = useState<string[]>([])
   const [addedIngredients, setAddedIngredients] = useState<string[]>([])
   const { addItem } = useCartStore()
-
-  if (!isOpen) return null
 
   const handleAddToCart = () => {
     addItem({
@@ -46,197 +45,128 @@ export function MenuItemModal({ item, isOpen, onClose }: MenuItemModalProps) {
       removedIngredients,
     })
     onClose()
-    // Reset state
     setQuantity(1)
     setRemovedIngredients([])
     setAddedIngredients([])
   }
 
-  const toggleRemoveIngredient = (ingredient: string) => {
-    if (removedIngredients.includes(ingredient)) {
-      setRemovedIngredients(removedIngredients.filter(i => i !== ingredient))
-    } else {
-      setRemovedIngredients([...removedIngredients, ingredient])
-    }
-  }
+  const toggle = (list: string[], setList: (v: string[]) => void, value: string) =>
+    setList(list.includes(value) ? list.filter((i) => i !== value) : [...list, value])
 
-  const toggleAddIngredient = (ingredient: string) => {
-    if (addedIngredients.includes(ingredient)) {
-      setAddedIngredients(addedIngredients.filter(i => i !== ingredient))
-    } else {
-      setAddedIngredients([...addedIngredients, ingredient])
-    }
-  }
-
-  const canRemoveIngredients = item.ingredients.filter(
-    ing => !removedIngredients.includes(ing)
-  )
-
-  const canAddIngredients = availableAdditions.filter(
-    ing => !item.ingredients.includes(ing) && !addedIngredients.includes(ing)
-  )
+  const canAddIngredients = availableAdditions.filter((ing) => !item.ingredients.includes(ing))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {item.name}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <X size={24} />
+    <Sheet
+      open={isOpen}
+      onClose={onClose}
+      title={item.name}
+      subtitle={
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="font-semibold text-arancia-600 dark:text-limone-300">{formatPrice(item.price)}</span>
+          {item.isBestSeller && (
+            <span className="inline-flex items-center gap-1"><Star size={14} className="fill-limone-400 text-limone-500" /> Best seller</span>
+          )}
+          {item.isVegan && <span className="inline-flex items-center gap-1"><Leaf size={14} className="text-emerald-600" /> Vegano</span>}
+          {item.isGlutenFree && <span className="inline-flex items-center gap-1"><WheatOff size={14} className="text-maiolica-500" /> Senza glutine</span>}
+        </span>
+      }
+      footer={
+        <div className="flex items-center gap-3">
+          <div className="flex items-center rounded-full border border-cream-300 dark:border-white/15">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="grid h-11 w-11 place-items-center rounded-full text-maiolica-800 hover:bg-maiolica-700/5 dark:text-cream-100"
+              aria-label="Diminuisci quantità"
+            >
+              <Minus size={18} />
+            </button>
+            <span className="w-8 text-center text-lg font-semibold tabular-nums">{quantity}</span>
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              className="grid h-11 w-11 place-items-center rounded-full text-maiolica-800 hover:bg-maiolica-700/5 dark:text-cream-100"
+              aria-label="Aumenta quantità"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
+          <button onClick={handleAddToCart} className="btn-primary flex-1 justify-between !px-5">
+            <span>Aggiungi</span>
+            <span className="tabular-nums">{formatPrice(item.price * quantity)}</span>
           </button>
         </div>
-
-        <div className="p-6 space-y-6">
-          {item.description && (
-            <p className="text-gray-600 dark:text-gray-400">{item.description}</p>
-          )}
-
-          {/* Ingredienti modificati in tempo reale */}
-          {(removedIngredients.length > 0 || addedIngredients.length > 0) && (
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Ingredienti modificati (clicca per annullare):
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {/* Ingredienti originali non rimossi */}
-                {item.ingredients
-                  .filter(ing => !removedIngredients.includes(ing))
-                  .map((ingredient) => (
-                    <span
-                      key={ingredient}
-                      className="px-2 py-1 text-xs rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    >
-                      {ingredient}
-                    </span>
-                  ))}
-                {/* Ingredienti rimossi (rosso) - cliccabili per ripristinare */}
-                {removedIngredients.map((ingredient) => (
-                  <button
-                    key={`removed-${ingredient}`}
-                    onClick={() => toggleRemoveIngredient(ingredient)}
-                    className="px-2 py-1 text-xs rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 line-through hover:bg-red-200 dark:hover:bg-red-800 transition-colors cursor-pointer"
-                    title="Clicca per ripristinare"
-                  >
-                    {ingredient}
-                  </button>
-                ))}
-                {/* Ingredienti aggiunti (verde) - cliccabili per rimuovere */}
-                {addedIngredients.map((ingredient) => (
-                  <button
-                    key={`added-${ingredient}`}
-                    onClick={() => toggleAddIngredient(ingredient)}
-                    className="px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition-colors cursor-pointer"
-                    title="Clicca per rimuovere"
-                  >
-                    + {ingredient}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Prezzo: {formatPrice(item.price)}
-            </p>
+      }
+    >
+      <div className="space-y-6">
+        {imageUrl && (
+          <div className="relative -mx-5 -mt-5 aspect-[16/10] overflow-hidden bg-cream-200 sm:mx-0 sm:mt-0 sm:rounded-2xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={imageUrl} alt={item.name} className="h-full w-full object-cover" />
           </div>
+        )}
 
-          {/* Remove Ingredients */}
-          {canRemoveIngredients.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Rimuovi ingredienti
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {canRemoveIngredients.map((ingredient) => (
-                  <button
-                    key={ingredient}
-                    onClick={() => toggleRemoveIngredient(ingredient)}
-                    className={cn(
-                      'px-3 py-1 rounded-full text-sm transition-colors',
-                      removedIngredients.includes(ingredient)
-                        ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    )}
-                  >
-                    - {ingredient}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        {item.description && (
+          <p className="leading-relaxed text-ink-soft dark:text-cream-200/80">{item.description}</p>
+        )}
 
-          {/* Add Ingredients */}
-          {canAddIngredients.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Aggiungi ingredienti
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {canAddIngredients.map((ingredient) => (
-                  <button
-                    key={ingredient}
-                    onClick={() => toggleAddIngredient(ingredient)}
-                    className={cn(
-                      'px-3 py-1 rounded-full text-sm transition-colors',
-                      addedIngredients.includes(ingredient)
-                        ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    )}
-                  >
-                    + {ingredient}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        {item.allergens.length > 0 && (
+          <p className="rounded-xl bg-limone-100 px-4 py-3 text-sm text-maiolica-900 dark:bg-limone-400/10 dark:text-limone-200">
+            <span className="font-semibold">Allergeni:</span> {item.allergens.join(', ')}
+          </p>
+        )}
 
-          {/* Quantity */}
+        {item.ingredients.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Quantità
+            <h3 className="font-sans text-sm font-semibold uppercase tracking-[0.12em] text-ink-muted dark:text-cream-200/60">
+              Ingredienti
             </h3>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                <Minus size={20} />
-              </button>
-              <span className="text-xl font-semibold text-gray-900 dark:text-white">
-                {quantity}
-              </span>
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                <Plus size={20} />
-              </button>
+            <p className="mt-1 text-xs text-ink-muted dark:text-cream-200/50">Tocca per toglierne uno</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {item.ingredients.map((ing) => {
+                const removed = removedIngredients.includes(ing)
+                return (
+                  <button
+                    key={ing}
+                    onClick={() => toggle(removedIngredients, setRemovedIngredients, ing)}
+                    aria-pressed={removed}
+                    className={cn(
+                      'chip !min-h-[36px] !px-3',
+                      removed && '!border-red-300 !bg-red-50 !text-red-700 line-through dark:!border-red-400/40 dark:!bg-red-500/10 dark:!text-red-300'
+                    )}
+                  >
+                    {ing}
+                  </button>
+                )
+              })}
             </div>
           </div>
+        )}
 
-          {/* Total */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <p className="text-xl font-bold text-gray-900 dark:text-white">
-              Totale: {formatPrice(item.price * quantity)}
-            </p>
+        {canAddIngredients.length > 0 && (
+          <div>
+            <h3 className="font-sans text-sm font-semibold uppercase tracking-[0.12em] text-ink-muted dark:text-cream-200/60">
+              Aggiungi
+            </h3>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {canAddIngredients.map((ing) => {
+                const added = addedIngredients.includes(ing)
+                return (
+                  <button
+                    key={ing}
+                    onClick={() => toggle(addedIngredients, setAddedIngredients, ing)}
+                    aria-pressed={added}
+                    className={cn(
+                      'chip !min-h-[36px] !px-3',
+                      added && '!border-emerald-400 !bg-emerald-50 !text-emerald-800 dark:!border-emerald-400/40 dark:!bg-emerald-500/10 dark:!text-emerald-300'
+                    )}
+                  >
+                    {added ? '✓' : '+'} {ing}
+                  </button>
+                )
+              })}
+            </div>
           </div>
-
-          {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Aggiungi al carrello
-          </button>
-        </div>
+        )}
       </div>
-    </div>
+    </Sheet>
   )
 }
-

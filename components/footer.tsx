@@ -1,81 +1,117 @@
-'use client'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Facebook, Instagram, Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
+import { site } from '@/lib/site'
 
-import { Facebook, Instagram, Mail, Phone } from 'lucide-react'
+const links = [
+  { href: '/menu', label: 'Menù' },
+  { href: '/chi-siamo', label: 'Chi siamo' },
+  { href: '/vip', label: 'Ospiti VIP' },
+  { href: '/ecommerce', label: 'Shop online' },
+  { href: '/maps', label: 'Dove siamo' },
+]
 
 export function Footer() {
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+393200738966'
-  const landlineNumber = process.env.NEXT_PUBLIC_PHONE_NUMBER || '091450747'
-  const email = process.env.NEXT_PUBLIC_EMAIL || 'giammanco.pietro@hotmail.it'
-  const facebookUrl =
-    process.env.NEXT_PUBLIC_FACEBOOK_URL ||
-    'https://www.facebook.com/share/1DLhw7PCf1/?mibextid=wwXIfr'
-  const instagramUrl =
-    process.env.NEXT_PUBLIC_INSTAGRAM_URL ||
-    'https://www.instagram.com/trattoria_da_piero_mondello?igsh=YWNmbWR1N2Z0dTJ0&utm_source=qr'
-
   return (
-    <footer className="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-20 md:mt-32 pb-20 md:pb-8">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
-          <a
-            href={facebookUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-          >
-            <Facebook size={24} />
-            <span className="hidden md:inline">Facebook</span>
-          </a>
-          
-          <a
-            href={`mailto:${email}`}
-            className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <Mail size={24} />
-            <span className="hidden md:inline">{email}</span>
-            <span className="md:hidden">Email</span>
-          </a>
-
-          <a
-            href={`tel:${landlineNumber.replace(/[^0-9]/g, '')}`}
-            className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <Phone size={24} />
-            <span className="hidden md:inline">{landlineNumber}</span>
-            <span className="md:hidden">Telefono</span>
-          </a>
-          
-          <a
-            href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 transition-colors"
-          >
-            <Phone size={24} />
-            <span className="hidden md:inline">{whatsappNumber}</span>
-            <span className="md:hidden">WhatsApp</span>
-          </a>
-          
-          <a
-            href={instagramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 transition-colors"
-          >
-            <Instagram size={24} />
-            <span className="hidden md:inline">Instagram</span>
-          </a>
-        </div>
-        
-        <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p className="mb-2">
-            Creato da{' '}
+    <footer className="relative mt-16 bg-maiolica-950 text-cream-100 md:mt-24">
+      <div className="tile-band h-3 opacity-90" aria-hidden />
+      <div className="container grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 lg:py-16">
+        <div className="sm:col-span-2 lg:col-span-5">
+          <Link href="/" className="inline-flex items-center gap-3">
+            <span className="relative h-14 w-14 overflow-hidden rounded-full bg-white">
+              <Image src="/profilo.png" alt="" fill sizes="56px" className="object-cover" />
+            </span>
+            <span>
+              <span className="block font-serif text-2xl text-cream-50">Trattoria Da Piero</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-limone-300">
+                Mondello · dal {site.since}
+              </span>
+            </span>
+          </Link>
+          <p className="mt-5 max-w-sm text-sm leading-relaxed text-cream-200/70">
+            Cucina tipica siciliana e pesce del golfo di Mondello, nella trattoria di famiglia
+            dello chef Piero Giammanco, sul lungomare.
+          </p>
+          <div className="mt-6 flex gap-3">
             <a
-              href="https://facevoice.ai/ai-chat"
+              href={site.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:underline"
+              aria-label="Instagram"
+              className="grid h-11 w-11 place-items-center rounded-full border border-white/15 transition hover:border-limone-300 hover:text-limone-300"
             >
+              <Instagram size={19} />
+            </a>
+            <a
+              href={site.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="grid h-11 w-11 place-items-center rounded-full border border-white/15 transition hover:border-limone-300 hover:text-limone-300"
+            >
+              <Facebook size={19} />
+            </a>
+          </div>
+        </div>
+
+        <div className="lg:col-span-3">
+          <h2 className="font-sans text-xs font-semibold uppercase tracking-[0.18em] text-limone-300">
+            Contatti
+          </h2>
+          <ul className="mt-5 space-y-3.5 text-sm">
+            <li>
+              <a href={site.mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 text-cream-200/80 hover:text-white">
+                <MapPin size={17} className="mt-0.5 shrink-0 text-arancia-400" />
+                <span>
+                  {site.address.street}
+                  <br />
+                  {site.address.city}
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href={site.phone.href} className="flex items-center gap-3 text-cream-200/80 hover:text-white">
+                <Phone size={17} className="shrink-0 text-arancia-400" />
+                {site.phone.display}
+              </a>
+            </li>
+            <li>
+              <a href={site.whatsapp.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-cream-200/80 hover:text-white">
+                <MessageCircle size={17} className="shrink-0 text-arancia-400" />
+                {site.whatsapp.display}
+              </a>
+            </li>
+            <li>
+              <a href={`mailto:${site.email}`} className="flex items-center gap-3 break-all text-cream-200/80 hover:text-white">
+                <Mail size={17} className="shrink-0 text-arancia-400" />
+                {site.email}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div className="lg:col-span-4 lg:pl-8">
+          <h2 className="font-sans text-xs font-semibold uppercase tracking-[0.18em] text-limone-300">
+            Esplora
+          </h2>
+          <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3.5 text-sm">
+            {links.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="text-cream-200/80 hover:text-white">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-white/10">
+        <div className="container flex flex-col gap-2 py-6 pb-[calc(var(--mobile-bar-h)+1.5rem+env(safe-area-inset-bottom))] text-xs text-cream-200/60 sm:flex-row sm:items-center sm:justify-between lg:pb-6">
+          <p>© {new Date().getFullYear()} Trattoria Da Piero · Mondello, Palermo</p>
+          <p>
+            Creato da{' '}
+            <a href="https://facevoice.ai/ai-chat" target="_blank" rel="noopener noreferrer" className="text-cream-100 underline-offset-4 hover:underline">
               Facevoice.ai
             </a>
           </p>
@@ -84,4 +120,3 @@ export function Footer() {
     </footer>
   )
 }
-

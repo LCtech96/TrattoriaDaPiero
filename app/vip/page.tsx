@@ -1,30 +1,23 @@
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
+import type { Metadata } from 'next'
+import { PageShell, PageHeader } from '@/components/page-shell'
 import { VipSection } from '@/components/vip-section'
+
+export const metadata: Metadata = {
+  title: 'Ospiti VIP | Trattoria da Piero Mondello',
+  description: 'Attori, giornalisti e sportivi che hanno scelto la Trattoria Da Piero a Mondello.',
+}
 
 export default function VipPage() {
   return (
-    <main className="min-h-screen">
-      <Navigation />
-      <div className="pt-16 md:pt-20 pb-20 md:pb-8">
-        <div className="container mx-auto px-4 py-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600 mb-6 transition-colors text-sm font-semibold"
-          >
-            <ArrowLeft size={18} />
-            <span>Indietro</span>
-          </Link>
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-            I Nostri Ospiti VIP
-          </h1>
-          <VipSection />
-        </div>
+    <PageShell>
+      <PageHeader
+        eyebrow="Ospiti illustri"
+        title="I nostri ospiti VIP"
+        description="Nel tempo la trattoria ha accolto attori, giornalisti e sportivi, senza mai perdere la sua identità fatta di genuinità e passione."
+      />
+      <div className="container py-10 sm:py-14">
+        <VipSection />
       </div>
-      <Footer />
-    </main>
+    </PageShell>
   )
 }
-

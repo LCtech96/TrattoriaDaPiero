@@ -1,133 +1,131 @@
 'use client'
 
 import { useState } from 'react'
-import { Navigation } from '@/components/navigation'
-import { Footer } from '@/components/footer'
+import Link from 'next/link'
+import { PageShell, PageHeader } from '@/components/page-shell'
 import { useCartStore } from '@/store/cart-store'
 import { formatPrice } from '@/lib/utils'
-import { Plus, Minus, Trash2 } from 'lucide-react'
+import { Plus, Minus, Trash2, UtensilsCrossed, MessageCircle } from 'lucide-react'
 import { OrderModal } from '@/components/order-modal'
 
 export default function CarrelloPage() {
-  const { items, updateQuantity, removeItem, getTotal, clearCart } = useCartStore()
+  const { items, updateQuantity, removeItem, getTotal } = useCartStore()
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
-
-  if (items.length === 0) {
-    return (
-      <main className="min-h-screen">
-        <Navigation />
-        <div className="pt-16 md:pt-20 pb-20 md:pb-8">
-          <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-              Il Tuo Carrello
-            </h1>
-            <div className="text-center py-12">
-              <p className="text-lg text-gray-600 dark:text-gray-400">
-                Il tuo carrello è vuoto
-              </p>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </main>
-    )
-  }
+  const count = items.reduce((s, i) => s + i.quantity, 0)
 
   return (
-    <main className="min-h-screen">
-      <Navigation />
-      <div className="pt-16 md:pt-20 pb-20 md:pb-8">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-            Il Tuo Carrello
-          </h1>
+    <PageShell>
+      <PageHeader
+        eyebrow="Ordina"
+        title="Il tuo ordine"
+        crumbs={[{ href: '/menu', label: 'Menù' }]}
+        description={
+          items.length > 0
+            ? `${count} ${count === 1 ? 'piatto' : 'piatti'} nel carrello. Invia l'ordine su WhatsApp, al tavolo o da asporto.`
+            : undefined
+        }
+      />
 
-          <div className="space-y-4 mb-8">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {item.name}
-                    </h3>
-                    {item.addedIngredients.length > 0 && (
-                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                        + {item.addedIngredients.join(', ')}
-                      </p>
-                    )}
-                    {item.removedIngredients.length > 0 && (
-                      <p className="text-sm text-red-600 dark:text-red-400 mt-1">
-                        - {item.removedIngredients.join(', ')}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex items-center gap-4">
+      <div className="container max-w-5xl py-10">
+        {items.length === 0 ? (
+          <div className="card mx-auto max-w-lg p-10 text-center">
+            <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-maiolica-700/10 text-maiolica-700 dark:bg-limone-400/15 dark:text-limone-300">
+              <UtensilsCrossed size={26} />
+            </span>
+            <p className="mt-5 font-serif text-2xl text-maiolica-900 dark:text-cream-50">Il carrello è vuoto</p>
+            <p className="mt-2 text-ink-soft dark:text-cream-200/70">
+              Sfoglia il menù e tocca un piatto per aggiungerlo.
+            </p>
+            <Link href="/menu" className="btn-primary mt-6">
+              Vai al menù
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-8 lg:grid-cols-12">
+            <ul className="space-y-3 lg:col-span-7">
+              {items.map((item) => (
+                <li key={item.id} className="card p-4 sm:p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="font-serif text-xl text-maiolica-900 dark:text-cream-50">{item.name}</h3>
+                      {item.addedIngredients.length > 0 && (
+                        <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300">
+                          + {item.addedIngredients.join(', ')}
+                        </p>
+                      )}
+                      {item.removedIngredients.length > 0 && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-300">
+                          senza {item.removedIngredients.join(', ')}
+                        </p>
+                      )}
+                    </div>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      onClick={() => removeItem(item.id)}
+                      className="-mr-1 -mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full text-ink-muted transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                      aria-label={`Rimuovi ${item.name}`}
                     >
-                      <Minus size={16} />
+                      <Trash2 size={18} />
                     </button>
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {item.quantity}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center rounded-full border border-cream-300 dark:border-white/15">
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="grid h-10 w-10 place-items-center rounded-full hover:bg-maiolica-700/5"
+                        aria-label="Diminuisci quantità"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <span className="w-8 text-center font-semibold tabular-nums">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="grid h-10 w-10 place-items-center rounded-full hover:bg-maiolica-700/5"
+                        aria-label="Aumenta quantità"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                    <span className="text-lg font-semibold tabular-nums text-arancia-600 dark:text-limone-300">
+                      {formatPrice(item.price * item.quantity)}
                     </span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      <Plus size={16} />
-                    </button>
                   </div>
-                  <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {formatPrice(item.price * item.quantity)}
+                </li>
+              ))}
+            </ul>
+
+            <aside className="lg:col-span-5">
+              <div className="card sticky top-[calc(var(--header-h)+1.5rem)] p-6">
+                <h2 className="font-serif text-2xl text-maiolica-900 dark:text-cream-50">Riepilogo</h2>
+                <dl className="mt-5 space-y-2 text-sm">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex justify-between gap-4 text-ink-soft dark:text-cream-200/70">
+                      <dt className="truncate">
+                        {item.quantity}× {item.name}
+                      </dt>
+                      <dd className="tabular-nums">{formatPrice(item.price * item.quantity)}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <div className="mt-5 flex items-baseline justify-between border-t border-cream-200 pt-5 dark:border-white/10">
+                  <span className="font-semibold">Totale</span>
+                  <span className="font-serif text-3xl tabular-nums text-maiolica-900 dark:text-cream-50">
+                    {formatPrice(getTotal())}
                   </span>
                 </div>
+                <button onClick={() => setIsOrderModalOpen(true)} className="btn-primary mt-6 w-full">
+                  <MessageCircle size={17} /> Procedi con l&apos;ordine
+                </button>
+                <Link href="/menu" className="btn-outline mt-3 w-full">
+                  Aggiungi altri piatti
+                </Link>
               </div>
-            ))}
+            </aside>
           </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                Totale
-              </span>
-              <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {formatPrice(getTotal())}
-              </span>
-            </div>
-            <button
-              onClick={() => setIsOrderModalOpen(true)}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Procedi con l&apos;ordine
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
-      {isOrderModalOpen && (
-        <OrderModal
-          isOpen={isOrderModalOpen}
-          onClose={() => setIsOrderModalOpen(false)}
-        />
-      )}
-
-      <Footer />
-    </main>
+      <OrderModal isOpen={isOrderModalOpen} onClose={() => setIsOrderModalOpen(false)} />
+    </PageShell>
   )
 }
-
-
-

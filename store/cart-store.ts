@@ -17,26 +17,22 @@ interface CartStore {
   updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
   getTotal: () => number
+  hydrate: () => void
 }
 
 export const useCartStore = create<CartStore>()((set, get) => {
-  // Load from localStorage on initialization
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('cart-storage')
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored)
-        if (parsed.state?.items) {
-          set({ items: parsed.state.items })
-        }
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
-  }
-
   return {
     items: [],
+    // Ripristina il carrello salvato (chiamato al mount lato client)
+    hydrate: () => {
+      if (typeof window === 'undefined') return
+      try {
+        const parsed = JSON.parse(localStorage.getItem('cart-storage') || '{}')
+        if (Array.isArray(parsed.state?.items)) set({ items: parsed.state.items })
+      } catch {
+        // dati non validi: si parte da un carrello vuoto
+      }
+    },
     addItem: (item) => {
       const newItem: CartItem = {
         ...item,

@@ -1,22 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useThemeStore } from '@/store/theme-store'
+import { useCartStore } from '@/store/cart-store'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { initTheme } = useThemeStore()
-  const [mounted, setMounted] = useState(false)
+  const initTheme = useThemeStore((s) => s.initTheme)
+  const hydrateCart = useCartStore((s) => s.hydrate)
 
   useEffect(() => {
-    setMounted(true)
     initTheme()
-  }, [initTheme])
-
-  // Evita problemi di hydration non renderizzando nulla fino al mount
-  if (!mounted) {
-    return <>{children}</>
-  }
+    hydrateCart()
+  }, [initTheme, hydrateCart])
 
   return <>{children}</>
 }
-

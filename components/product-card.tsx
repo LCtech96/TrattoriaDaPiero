@@ -26,64 +26,56 @@ export function ProductCard({ product }: { product: PublicProduct }) {
   }
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="card group flex flex-col overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lift">
       <Link href={`/ecommerce/${product.slug}`} className="block">
-        <div className="relative aspect-square bg-gray-100 dark:bg-gray-700">
+        <div className="relative aspect-square overflow-hidden bg-cream-100 dark:bg-maiolica-950">
           {product.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={product.imageUrl}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-              Nessuna immagine
-            </div>
+            <div className="tile-band h-full w-full opacity-30" aria-hidden />
           )}
           {soldOut && (
-            <span className="absolute top-2 left-2 bg-gray-900/80 text-white text-xs font-semibold px-2 py-1 rounded-full">
+            <span className="absolute left-2 top-2 rounded-full bg-maiolica-950/80 px-2.5 py-1 text-xs font-semibold text-white">
               Esaurito
             </span>
           )}
           {!soldOut && product.isFeatured && (
-            <span className="absolute top-2 left-2 bg-amber-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+            <span className="absolute left-2 top-2 rounded-full bg-limone-400 px-2.5 py-1 text-xs font-semibold text-maiolica-950">
               In vetrina
             </span>
           )}
         </div>
       </Link>
 
-      <div className="flex flex-col flex-1 p-4">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <Link href={`/ecommerce/${product.slug}`}>
-          <h3 className="font-semibold text-gray-900 dark:text-white leading-snug">
+          <h3 className="font-serif text-base leading-snug text-maiolica-900 dark:text-cream-50 sm:text-lg">
             {product.name}
           </h3>
         </Link>
-        {product.unit && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{product.unit}</p>
-        )}
-        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 line-clamp-2 flex-1">
+        {product.unit && <p className="mt-0.5 text-xs text-ink-muted dark:text-cream-200/60">{product.unit}</p>}
+        <p className="mt-2 line-clamp-2 hidden flex-1 text-sm text-ink-soft dark:text-cream-200/70 sm:block">
           {product.description}
         </p>
 
-        <div className="flex items-end justify-between gap-2 mt-4">
+        <div className="mt-3 flex flex-1 flex-col justify-end gap-2 sm:mt-4 sm:flex-none sm:flex-row sm:items-end sm:justify-between">
           <div>
             {product.comparePriceCents && product.comparePriceCents > product.priceCents && (
-              <span className="block text-xs text-gray-400 line-through">
+              <span className="block text-xs text-ink-muted line-through">
                 {formatPrice(product.comparePriceCents, product.currency)}
               </span>
             )}
-            <span className="text-lg font-bold text-gray-900 dark:text-white">
+            <span className="text-lg font-semibold tabular-nums text-arancia-600 dark:text-limone-300">
               {formatPrice(product.priceCents, product.currency)}
             </span>
           </div>
-          <button
-            onClick={handleAdd}
-            disabled={soldOut}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button onClick={handleAdd} disabled={soldOut} className="btn-primary !min-h-[40px] !px-4 !py-2">
             {added ? <Check size={16} /> : <ShoppingCart size={16} />}
             {added ? 'Aggiunto' : 'Aggiungi'}
           </button>

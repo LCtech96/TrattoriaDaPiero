@@ -1,59 +1,65 @@
-'use client'
-
-import { useState } from 'react'
 import Image from 'next/image'
-import { cn } from '@/lib/utils'
 
-interface Highlight {
-  id: string
-  label: string
-  imageSrc: string
-}
-
-const highlights: Highlight[] = [
-  { id: 'ingredienti', label: 'Ingredienti', imageSrc: '/uva.png' },
-  { id: 'allergeni', label: 'Allergeni', imageSrc: '/arancia.png' },
-  { id: 'vegan', label: 'Vegan/Gluten Free', imageSrc: '/limone.png' },
-  { id: 'bestseller', label: 'Best Seller', imageSrc: '/moro.png' },
+const highlights = [
+  {
+    id: 'pescato',
+    title: 'Pescato del giorno',
+    text: 'Il menù segue il pescato del golfo di Mondello e di Isola delle Femmine.',
+    imageSrc: '/limone.png',
+  },
+  {
+    id: 'tradizione',
+    title: 'Tradizione di famiglia',
+    text: 'Dal 1930, quando Nonna Rosalia cucinava polpi proprio qui, sulla piazza.',
+    imageSrc: '/moro.png',
+  },
+  {
+    id: 'vini',
+    title: 'Carta dei vini',
+    text: 'Una carta curata per accompagnare il pesce e i piatti della tradizione.',
+    imageSrc: '/uva.png',
+  },
+  {
+    id: 'dolci',
+    title: 'Dolci e caffè',
+    text: 'Per chiudere in bellezza: dolci della tradizione e un ottimo caffè.',
+    imageSrc: '/arancia.png',
+  },
 ]
 
 export function Highlights() {
-  const [activeHighlight, setActiveHighlight] = useState<string | null>(null)
-
   return (
-    <div className="container mx-auto px-4 py-6 md:py-8">
-      <div className="flex items-center justify-center gap-3 md:gap-4">
-        {highlights.map((highlight) => {
-          const isActive = activeHighlight === highlight.id
+    <section className="section pt-8 md:pt-12" aria-labelledby="perche-noi">
+      <div className="container">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="eyebrow mb-4">Perché sceglierci</p>
+          <h2 id="perche-noi" className="heading text-maiolica-900 dark:text-cream-50">
+            I sapori autentici della borgata
+          </h2>
+        </div>
 
-          return (
-            <button
-              key={highlight.id}
-              onClick={() => setActiveHighlight(isActive ? null : highlight.id)}
-              className={cn(
-                'rounded-full overflow-hidden transition-all',
-                'border-2 border-transparent',
-                isActive && 'ring-2 ring-amber-500 dark:ring-amber-400 scale-105',
-                'hover:scale-105 active:scale-95'
-              )}
-              style={{
-                width: '80px',
-                height: '80px',
-              }}
-            >
-              <div className="relative w-full h-full">
+        <ul className="mt-12 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
+          {highlights.map((h) => (
+            <li key={h.id} className="group text-center">
+              <div className="relative mx-auto aspect-square w-28 overflow-hidden rounded-full border-4 border-cream-50 shadow-lift ring-1 ring-cream-200 transition-transform duration-500 group-hover:-translate-y-1 dark:border-maiolica-900 dark:ring-white/10 sm:w-36">
                 <Image
-                  src={highlight.imageSrc}
-                  alt={highlight.label}
+                  src={h.imageSrc}
+                  alt=""
                   fill
-                  className="object-cover"
+                  sizes="(min-width: 640px) 144px, 112px"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
-            </button>
-          )
-        })}
+              <h3 className="mt-5 font-serif text-lg text-maiolica-900 dark:text-cream-50 sm:text-xl">
+                {h.title}
+              </h3>
+              <p className="mx-auto mt-2 max-w-[16rem] text-sm leading-relaxed text-ink-soft dark:text-cream-200/70">
+                {h.text}
+              </p>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
+    </section>
   )
 }
-
