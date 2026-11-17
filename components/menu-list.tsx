@@ -21,7 +21,21 @@ export function MenuList() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<number>(categories[0]?.id ?? 0)
   const chipsRef = useRef<HTMLDivElement>(null)
+  const [imageIds, setImageIds] = useState<Set<number>>(new Set())
   const { items: cartItems, getTotal } = useCartStore()
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/images/menu-items')
+      .then((res) => (res.ok ? res.json() : { ids: [] }))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data.ids)) setImageIds(new Set(data.ids))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0)
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -162,7 +176,7 @@ export function MenuList() {
                 </div>
                 <div className="divide-y divide-cream-200/80 dark:divide-white/5">
                   {items.map((item) => (
-                    <MenuItemCard key={item.id} item={item} />
+                    <MenuItemCard key={item.id} item={item} hasImage={imageIds.has(item.id)} />
                   ))}
                 </div>
               </section>

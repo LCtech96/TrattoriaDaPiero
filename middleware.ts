@@ -80,7 +80,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (pathname.startsWith('/api/admin') && !PUBLIC_WRITE_PATHS.includes(pathname)) {
+  // /api/admin/session dice solo "sei loggato sì/no": è pubblica.
+  if (
+    pathname.startsWith('/api/admin') &&
+    !PUBLIC_WRITE_PATHS.includes(pathname) &&
+    pathname !== '/api/admin/session'
+  ) {
     if (!session) {
       return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
     }

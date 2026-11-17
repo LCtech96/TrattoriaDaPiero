@@ -8,10 +8,12 @@ import { Star, Leaf, WheatOff, Plus } from 'lucide-react'
 
 interface MenuItemCardProps {
   item: MenuItem
+  /** true se il piatto ha una foto sul server (elenco caricato una volta da MenuList) */
+  hasImage?: boolean
 }
 
 /** Foto del piatto caricata dall'admin: database -> cache localStorage. */
-function useMenuItemImage(itemId: number) {
+function useMenuItemImage(itemId: number, hasImage: boolean) {
   const [image, setImage] = useState<string | null>(null)
   const blobUrlRef = useRef<string | null>(null)
 
@@ -30,6 +32,7 @@ function useMenuItemImage(itemId: number) {
     }
 
     const load = async () => {
+      if (!hasImage) return
       try {
         const response = await fetch(`/api/images/menu-items/${itemId}`)
         if (response.ok) {
@@ -52,6 +55,7 @@ function useMenuItemImage(itemId: number) {
     }
 
     load()
+    // Aggiornamento immediato quando l'admin carica una foto da questo browser
     window.addEventListener('storage', load)
     window.addEventListener('imageUpdated', handleImageUpdate as EventListener)
     return () => {
@@ -59,14 +63,14 @@ function useMenuItemImage(itemId: number) {
       window.removeEventListener('imageUpdated', handleImageUpdate as EventListener)
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current)
     }
-  }, [itemId])
+  }, [itemId, hasImage])
 
   return [image, setImage] as const
 }
 
-export function MenuItemCard({ item }: MenuItemCardProps) {
+export function MenuItemCard({ item, hasImage = false }: MenuItemCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [itemImage, setItemImage] = useMenuItemImage(item.id)
+  const [itemImage, setItemImage] = useMenuItemImage(item.id, hasImage)
 
   return (
     <>
