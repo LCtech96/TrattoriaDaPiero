@@ -23,7 +23,9 @@ function SmartImage({
   priority?: boolean
   className?: string
 }) {
-  if (src.startsWith('data:') || src.startsWith('blob:')) {
+  // next/image solo per le immagini del sito: le altre (base64, blob, URL esterni)
+  // si mostrano direttamente, senza passare dall'ottimizzatore.
+  if (!src.startsWith('/') || src.startsWith('//')) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img

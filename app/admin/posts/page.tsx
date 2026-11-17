@@ -194,7 +194,7 @@ export default function AdminPosts() {
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
             >
               <div className="relative w-full h-64 md:h-96">
-                {post.imageUrl.startsWith('data:') || post.imageUrl.startsWith('blob:') ? (
+                {!post.imageUrl.startsWith('/') || post.imageUrl.startsWith('//') ? (
                   <img
                     src={post.imageUrl}
                     alt={post.title || post.description}

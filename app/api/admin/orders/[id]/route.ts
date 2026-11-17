@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { ORDER_STATUSES, PAYMENT_METHODS, parsePriceToCents } from '@/lib/ecommerce'
+import { requireAdmin } from '@/lib/require-admin'
+import { logSecurityEvent } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+type Params = { params: Promise<{ id: string }> }
 
 function parseId(raw: string): number | null {
   const id = Number.parseInt(raw, 10)
@@ -10,13 +15,16 @@ function parseId(raw: string): number | null {
 }
 
 /** Aggiorna lo stato dell'ordine e/o registra un incasso manuale. */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: Params) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
-    const id = parseId(params.id)
+    const id = parseId((await params).id)
     if (id === null) {
       return NextResponse.json({ error: 'ID ordine non valido' }, { status: 400 })
     }
@@ -49,9 +57,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       // Se non viene indicato un importo si registra il totale dell'ordine.
       const amountRaw = String(body.payment.amount ?? '').trim()
       const amountCents = amountRaw === '' ? order.totalCents : parsePriceToCents(amountRaw)
-      if (amountCents === null || amountCents <= 0) {
+      if (amountCents === null || amountCents <= 0 || amountCents > 100_000_00) {
         return NextResponse.json({ error: 'Importo non valido' }, { status: 400 })
       }
+      const reference = String(body.payment.reference ?? '').trim().slice(0, 200)
+      const notes = String(body.payment.notes ?? '').trim().slice(0, 1000)
 
       await prisma.$transaction(async (tx: any) => {
         await tx.payment.create({
@@ -60,8 +70,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
             amountCents,
             currency: order.currency,
             provider: method,
-            providerRef: String(body.payment.reference ?? '').trim() || null,
-            notes: String(body.payment.notes ?? '').trim() || null,
+            providerRef: reference || null,
+            notes: notes || null,
             status: 'succeeded',
           },
         })
@@ -91,6 +101,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           },
         })
       })
+      await logSecurityEvent('admin_payment', request, `ordine ${order.orderNumber}: ${method} ${(amountCents / 100).toFixed(2)} ${order.currency}`)
     } else if (Object.keys(data).length > 0) {
       await prisma.order.update({ where: { id }, data })
     } else {
@@ -108,13 +119,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
-    const id = parseId(params.id)
+    const id = parseId((await params).id)
     if (id === null) {
       return NextResponse.json({ error: 'ID ordine non valido' }, { status: 400 })
     }
@@ -132,6 +146,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     }
 
     await prisma.order.delete({ where: { id } })
+    await logSecurityEvent('admin_delete', request, `ordine ${order.orderNumber}`)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting order:', error)

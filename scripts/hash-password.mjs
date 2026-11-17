@@ -9,7 +9,9 @@
  */
 import { webcrypto as crypto } from 'node:crypto'
 
-const PBKDF2_ITERATIONS = 210_000
+// 600.000 iterazioni: raccomandazione OWASP attuale per PBKDF2-HMAC-SHA256.
+// Gli hash creati con meno iterazioni restano validi (il numero è salvato nell'hash).
+const PBKDF2_ITERATIONS = 600_000
 const encoder = new TextEncoder()
 
 function toBase64Url(bytes) {

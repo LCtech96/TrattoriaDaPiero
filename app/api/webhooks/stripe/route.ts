@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { prisma } from '@/lib/db'
 import { getStripe } from '@/lib/stripe'
+import { logSecurityEvent } from '@/lib/security'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
 
   const signature = request.headers.get('stripe-signature')
   if (!signature) {
+    await logSecurityEvent('webhook_bad_signature', request, 'firma mancante')
     return NextResponse.json({ error: 'Firma mancante' }, { status: 400 })
   }
 
@@ -31,8 +33,8 @@ export async function POST(request: NextRequest) {
   try {
     const payload = await request.text()
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret)
-  } catch (error) {
-    console.error('Stripe webhook signature verification failed:', error)
+  } catch {
+    await logSecurityEvent('webhook_bad_signature', request, 'firma non valida')
     return NextResponse.json({ error: 'Firma non valida' }, { status: 400 })
   }
 
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object as Stripe.Checkout.Session
         if (session.payment_status === 'paid') {
-          await markOrderPaid(session)
+          await markOrderPaid(session, request)
         }
         break
       }
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ received: true })
 }
 
-async function markOrderPaid(session: Stripe.Checkout.Session) {
+async function markOrderPaid(session: Stripe.Checkout.Session, request: Request) {
   const order = await prisma!.order.findFirst({
     where: session.id
       ? { stripeSessionId: session.id }
@@ -90,26 +92,36 @@ async function markOrderPaid(session: Stripe.Checkout.Session) {
     return
   }
 
+  // L'importo incassato deve coincidere con il totale calcolato dal server.
+  // Se non coincide l'ordine NON viene segnato come pagato: va controllato a mano.
+  const currency = (session.currency ?? 'eur').toUpperCase()
+  if (session.amount_total !== order.totalCents || currency !== String(order.currency ?? 'EUR').toUpperCase()) {
+    await logSecurityEvent(
+      'payment_amount_mismatch',
+      request,
+      `ordine ${order.orderNumber}: pagati ${((session.amount_total ?? 0) / 100).toFixed(2)} ${currency}, attesi ${(order.totalCents / 100).toFixed(2)} ${order.currency}`
+    )
+    return
+  }
+
   const paymentIntentId =
     typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id
-
-  // Stripe può inviare lo stesso evento più volte: registriamo il pagamento
-  // solo se non esiste già con lo stesso riferimento.
-  const alreadyRecorded = paymentIntentId
-    ? await prisma!.payment.findFirst({
-        where: { orderId: order.id, provider: 'stripe', providerRef: paymentIntentId },
-      })
-    : null
+  const providerRef = paymentIntentId ?? session.id
 
   await prisma!.$transaction(async (tx: any) => {
+    // Stripe può inviare lo stesso evento più volte: il pagamento si registra
+    // una sola volta per riferimento (controllo dentro la transazione).
+    const alreadyRecorded = await tx.payment.findFirst({
+      where: { orderId: order.id, provider: 'stripe', providerRef },
+    })
     if (!alreadyRecorded) {
       await tx.payment.create({
         data: {
           orderId: order.id,
           amountCents: session.amount_total ?? order.totalCents,
-          currency: (session.currency ?? 'eur').toUpperCase(),
+          currency,
           provider: 'stripe',
-          providerRef: paymentIntentId ?? session.id,
+          providerRef,
           status: 'succeeded',
         },
       })

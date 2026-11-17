@@ -16,8 +16,48 @@ const PUBLIC_WRITE_PATHS = [
   '/api/webhooks/stripe',
 ]
 
+/** Chiamate server-to-server senza browser: non hanno un'origine da controllare. */
+const NO_ORIGIN_CHECK_PATHS = ['/api/webhooks/stripe']
+
+/**
+ * Protezione CSRF: una richiesta che modifica dati deve partire dal nostro
+ * stesso sito. I browser aggiungono sempre l'header Origin alle POST/PUT/
+ * PATCH/DELETE (e Sec-Fetch-Site), e una pagina esterna non può falsificarli.
+ * Si somma al cookie SameSite=Lax.
+ */
+function isCrossSite(request: NextRequest): boolean {
+  const host = request.headers.get('host') ?? request.nextUrl.host
+  const origin = request.headers.get('origin')
+  if (origin) {
+    try {
+      return new URL(origin).host !== host
+    } catch {
+      return true
+    }
+  }
+  return request.headers.get('sec-fetch-site') === 'cross-site'
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  if (
+    pathname.startsWith('/api/') &&
+    WRITE_METHODS.has(request.method) &&
+    !NO_ORIGIN_CHECK_PATHS.includes(pathname) &&
+    isCrossSite(request)
+  ) {
+    console.warn(
+      JSON.stringify({
+        security: 'csrf_blocked',
+        path: pathname,
+        origin: request.headers.get('origin'),
+        at: new Date().toISOString(),
+      })
+    )
+    return NextResponse.json({ error: 'Origine della richiesta non consentita' }, { status: 403 })
+  }
+
   const token = request.cookies.get(ADMIN_COOKIE)?.value
   const session = await verifySessionToken(token)
 

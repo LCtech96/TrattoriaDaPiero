@@ -3,14 +3,18 @@ import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_request: Request, { params }: { params: { slug: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const { slug } = await params
+    if (!/^[a-z0-9-]{1,100}$/.test(slug)) {
+      return NextResponse.json({ error: 'Prodotto non trovato' }, { status: 404 })
+    }
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
     const product = await prisma.product.findFirst({
-      where: { slug: params.slug, isActive: true },
+      where: { slug, isActive: true },
       select: {
         id: true,
         slug: true,

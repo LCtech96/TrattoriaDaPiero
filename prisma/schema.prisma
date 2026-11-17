@@ -202,3 +202,24 @@ model Payment {
   @@index([orderId])
   @@index([paidAt])
 }
+
+// Contatori del rate limit (login, checkout), condivisi tra le istanze serverless.
+// Tabella creata automaticamente da lib/security.ts al primo utilizzo.
+model RateLimit {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+}
+
+// Registro degli eventi di sicurezza, visibile in /admin/sicurezza.
+// Tabella creata automaticamente da lib/security.ts al primo utilizzo.
+model SecurityEvent {
+  id        Int      @id @default(autoincrement())
+  type      String
+  ip        String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+}

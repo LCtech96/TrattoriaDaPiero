@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateOrderNumber } from '@/lib/ecommerce'
 import { getSiteUrl, getStripe } from '@/lib/stripe'
+import { getClientIp, logSecurityEvent, rateLimit } from '@/lib/security'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,7 +20,28 @@ function shippingCents(subtotal: number): number {
   return flat
 }
 
+// Contro gli ordini finti a raffica: 10 tentativi ogni 10 minuti per IP e
+// al massimo 300 ordini l'ora in totale.
+const IP_LIMIT = 10
+const IP_WINDOW_SECONDS = 10 * 60
+const GLOBAL_LIMIT = 300
+const GLOBAL_WINDOW_SECONDS = 60 * 60
+
 export async function POST(request: NextRequest) {
+  const perIp = await rateLimit(`checkout:ip:${getClientIp(request)}`, IP_LIMIT, IP_WINDOW_SECONDS)
+  const global = perIp.allowed
+    ? await rateLimit('checkout:global', GLOBAL_LIMIT, GLOBAL_WINDOW_SECONDS)
+    : perIp
+  if (!perIp.allowed || !global.allowed) {
+    if (perIp.count === IP_LIMIT + 1 || global.count === GLOBAL_LIMIT + 1) {
+      await logSecurityEvent('checkout_rate_limited', request, perIp.allowed ? 'limite globale' : 'limite per IP')
+    }
+    return NextResponse.json(
+      { error: 'Troppe richieste. Riprova tra qualche minuto.' },
+      { status: 429, headers: { 'Retry-After': String(perIp.allowed ? global.retryAfter : perIp.retryAfter) } }
+    )
+  }
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
@@ -36,21 +58,31 @@ export async function POST(request: NextRequest) {
     const shippingAddress = String(body.shippingAddress ?? '').trim()
     const notes = String(body.notes ?? '').trim().slice(0, 1000)
 
-    if (customerName.length < 2) {
+    if (customerName.length < 2 || customerName.length > 120) {
       return NextResponse.json({ error: 'Inserisci nome e cognome' }, { status: 400 })
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+    if (customerPhone.length > 40 || (customerPhone && !/^[0-9+()\s./-]{5,40}$/.test(customerPhone))) {
+      return NextResponse.json({ error: 'Numero di telefono non valido' }, { status: 400 })
+    }
+    if (shippingAddress.length > 300) {
+      return NextResponse.json({ error: 'Indirizzo troppo lungo' }, { status: 400 })
+    }
+    if (customerEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
       return NextResponse.json({ error: 'Inserisci un indirizzo email valido' }, { status: 400 })
     }
 
-    const rawItems = Array.isArray(body.items) ? body.items : []
+    const rawItems = Array.isArray(body.items) ? body.items.slice(0, 50) : []
     const items: RequestItem[] = []
     for (const raw of rawItems) {
       const productId = Number.parseInt(String(raw?.productId), 10)
       const quantity = Number.parseInt(String(raw?.quantity), 10)
       if (!Number.isFinite(productId) || productId <= 0) continue
       if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 99) continue
-      items.push({ productId, quantity })
+      // Lo stesso prodotto ripetuto su più righe si somma, così il controllo
+      // della disponibilità non si può aggirare spezzando l'ordine.
+      const existing = items.find((item) => item.productId === productId)
+      if (existing) existing.quantity += quantity
+      else items.push({ productId, quantity })
     }
 
     if (items.length === 0) {

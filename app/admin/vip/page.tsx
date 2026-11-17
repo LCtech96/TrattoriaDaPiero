@@ -200,7 +200,7 @@ export default function AdminVip() {
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
             >
               <div className="relative w-full h-64">
-                {vip.imageUrl.startsWith('data:') || vip.imageUrl.startsWith('blob:') ? (
+                {!vip.imageUrl.startsWith('/') || vip.imageUrl.startsWith('//') ? (
                   <img
                     src={vip.imageUrl}
                     alt={vip.title || 'VIP Guest'}

@@ -151,7 +151,7 @@ export default function AdminGeneralImages() {
             <div className="space-y-4">
               <div className="relative w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
                 {coverImage ? (
-                  coverImage.startsWith('data:') || coverImage.startsWith('blob:') ? (
+                  !coverImage.startsWith('/') || coverImage.startsWith('//') ? (
                     <img
                       src={coverImage}
                       alt="Cover"
@@ -202,7 +202,7 @@ export default function AdminGeneralImages() {
             <div className="space-y-4">
               <div className="relative w-32 h-32 mx-auto bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 {profileImage ? (
-                  profileImage.startsWith('data:') || profileImage.startsWith('blob:') ? (
+                  !profileImage.startsWith('/') || profileImage.startsWith('//') ? (
                     <img
                       src={profileImage}
                       alt="Profile"

@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAdmin } from '@/lib/require-admin'
+import { ORDER_STATUSES } from '@/lib/ecommerce'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
     const status = request.nextUrl.searchParams.get('status')
-    const where = status && status !== 'tutti' ? { status } : {}
+    const where =
+      status && (ORDER_STATUSES as readonly string[]).includes(status) ? { status } : {}
 
     const orders = await prisma.order.findMany({
       where,

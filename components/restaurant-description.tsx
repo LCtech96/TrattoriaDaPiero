@@ -15,6 +15,22 @@ const defaults = {
 
 type Key = keyof typeof defaults
 
+/**
+ * Mostra il testo in modo sicuro: l'unico markup ammesso è <strong>…</strong>,
+ * tutto il resto viene visualizzato come testo (mai eseguito come HTML).
+ */
+function RichText({ text }: { text: string }) {
+  const parts = text.split(/(<strong>[\s\S]*?<\/strong>)/g)
+  return (
+    <>
+      {parts.map((part, i) => {
+        const bold = /^<strong>([\s\S]*?)<\/strong>$/.exec(part)
+        return bold ? <strong key={i}>{bold[1]}</strong> : <span key={i}>{part}</span>
+      })}
+    </>
+  )
+}
+
 export function RestaurantDescription() {
   const [desc, setDesc] = useState(defaults)
 
@@ -62,9 +78,15 @@ export function RestaurantDescription() {
         </div>
 
         <div className="space-y-5 text-base leading-relaxed text-ink-soft dark:text-cream-200/80 sm:text-lg lg:col-span-7 [&_strong]:font-semibold [&_strong]:text-maiolica-900 dark:[&_strong]:text-cream-50">
-          <p className="first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-6xl first-letter:leading-[0.85] first-letter:text-arancia-600 dark:first-letter:text-limone-300" dangerouslySetInnerHTML={{ __html: desc.desc1 }} />
-          <p dangerouslySetInnerHTML={{ __html: desc.desc2 }} />
-          <p dangerouslySetInnerHTML={{ __html: desc.desc3 }} />
+          <p className="first-letter:float-left first-letter:mr-3 first-letter:font-serif first-letter:text-6xl first-letter:leading-[0.85] first-letter:text-arancia-600 dark:first-letter:text-limone-300" >
+            <RichText text={desc.desc1} />
+          </p>
+          <p>
+            <RichText text={desc.desc2} />
+          </p>
+          <p>
+            <RichText text={desc.desc3} />
+          </p>
         </div>
       </div>
     </section>

@@ -50,7 +50,7 @@ export function PostsFeed() {
               className={`card overflow-hidden ${i === 0 && posts.length % 2 === 1 ? 'md:col-span-2 md:grid md:grid-cols-2' : ''}`}
             >
               <div className="relative aspect-[4/3] w-full bg-cream-200 dark:bg-maiolica-950">
-                {post.imageUrl.startsWith('data:') || post.imageUrl.startsWith('blob:') ? (
+                {!post.imageUrl.startsWith('/') || post.imageUrl.startsWith('//') ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={post.imageUrl}

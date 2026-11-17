@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { staticVips, type VipItem } from './vip-data'
 
 function VipImage({ vip, sizes, className }: { vip: VipItem; sizes: string; className: string }) {
-  if (vip.imageUrl.startsWith('data:') || vip.imageUrl.startsWith('blob:')) {
+  if (!vip.imageUrl.startsWith('/') || vip.imageUrl.startsWith('//')) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img src={vip.imageUrl} alt={vip.title || 'Ospite VIP'} className={`absolute inset-0 h-full w-full ${className}`} loading="lazy" />

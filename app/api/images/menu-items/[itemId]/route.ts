@@ -1,136 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAdmin } from '@/lib/require-admin'
+import { validateImage } from '@/lib/image-validation'
+import { logSecurityEvent } from '@/lib/security'
 
-// GET - Recupera l'immagine di un menu item
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { itemId: string } }
-) {
+export const runtime = 'nodejs'
+
+type Params = { params: Promise<{ itemId: string }> }
+
+function parseItemId(raw: string): number | null {
+  const id = Number.parseInt(raw, 10)
+  return Number.isFinite(id) && id > 0 && id < 1_000_000 ? id : null
+}
+
+// GET - Recupera l'immagine di un piatto
+export async function GET(_request: NextRequest, { params }: Params) {
   try {
-    const itemId = parseInt(params.itemId)
-    
-    if (isNaN(itemId)) {
-      return NextResponse.json(
-        { error: 'ID menu item non valido' },
-        { status: 400 }
-      )
+    const itemId = parseItemId((await params).itemId)
+    if (itemId === null) {
+      return NextResponse.json({ error: 'ID menu item non valido' }, { status: 400 })
     }
-
     if (!prisma) {
-      return NextResponse.json(
-        { error: 'Database non disponibile' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
-    // Prima prova a recuperare dal MenuItem
     const menuItem = await prisma.menuItem.findUnique({
       where: { id: itemId },
-      select: { imageUrl: true }
+      select: { imageUrl: true },
     })
-
     if (menuItem?.imageUrl) {
-      return NextResponse.json({ 
-        imageUrl: menuItem.imageUrl 
-      })
+      return NextResponse.json({ imageUrl: menuItem.imageUrl })
     }
 
-    // Fallback: prova a recuperare dal Content
-    const key = `menu_item_image_${itemId}`
     const content = await prisma.content.findUnique({
-      where: { key },
-      select: { value: true }
+      where: { key: `menu_item_image_${itemId}` },
+      select: { value: true },
     })
-
-    return NextResponse.json({ 
-      imageUrl: content?.value || null 
-    })
+    return NextResponse.json({ imageUrl: content?.value || null })
   } catch (error) {
     console.error('Error fetching menu item image:', error)
-    return NextResponse.json(
-      { error: 'Errore nel recupero dell\'immagine' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Errore nel recupero dell'immagine" }, { status: 500 })
   }
 }
 
-// POST - Salva l'immagine di un menu item
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { itemId: string } }
-) {
+// POST - Salva l'immagine di un piatto (solo admin)
+export async function POST(request: NextRequest, { params }: Params) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
-    const itemId = parseInt(params.itemId)
-    
-    if (isNaN(itemId)) {
-      return NextResponse.json(
-        { error: 'ID menu item non valido' },
-        { status: 400 }
-      )
+    const itemId = parseItemId((await params).itemId)
+    if (itemId === null) {
+      return NextResponse.json({ error: 'ID menu item non valido' }, { status: 400 })
     }
 
-    const body = await request.json()
-    const { imageUrl } = body
-
-    if (!imageUrl || typeof imageUrl !== 'string') {
-      return NextResponse.json(
-        { error: 'URL immagine non valido' },
-        { status: 400 }
-      )
+    const body = await request.json().catch(() => null)
+    const image = validateImage(body?.imageUrl)
+    if (!image.ok) {
+      await logSecurityEvent('upload_rejected', request, `piatto ${itemId}: ${image.error}`)
+      return NextResponse.json({ error: image.error }, { status: 400 })
     }
 
     if (!prisma) {
-      return NextResponse.json(
-        { error: 'Database non disponibile' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
-    // Verifica che il menu item esista
-    const existingItem = await prisma.menuItem.findUnique({
-      where: { id: itemId }
-    })
-
+    const existingItem = await prisma.menuItem.findUnique({ where: { id: itemId } })
     if (!existingItem) {
-      // Se il menu item non esiste nel database, usa il modello Content come fallback
+      // Il menù è statico (data/menu-data.ts): l'immagine si salva in Content.
       const key = `menu_item_image_${itemId}`
       const content = await prisma.content.upsert({
         where: { key },
-        update: { 
-          value: imageUrl,
-          type: 'image'
-        },
-        create: {
-          key,
-          value: imageUrl,
-          type: 'image'
-        },
-        select: { key: true, value: true }
+        update: { value: image.value!, type: 'image' },
+        create: { key, value: image.value!, type: 'image' },
+        select: { key: true, value: true },
       })
-
-      return NextResponse.json({ 
-        success: true,
-        imageUrl: content.value 
-      })
+      return NextResponse.json({ success: true, imageUrl: content.value })
     }
 
-    // Aggiorna l'immagine
     const updatedItem = await prisma.menuItem.update({
       where: { id: itemId },
-      data: { imageUrl },
-      select: { id: true, imageUrl: true }
+      data: { imageUrl: image.value },
+      select: { id: true, imageUrl: true },
     })
-
-    return NextResponse.json({ 
-      success: true,
-      imageUrl: updatedItem?.imageUrl 
-    })
+    return NextResponse.json({ success: true, imageUrl: updatedItem?.imageUrl })
   } catch (error) {
     console.error('Error saving menu item image:', error)
-    return NextResponse.json(
-      { error: 'Errore nel salvataggio dell\'immagine' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Errore nel salvataggio dell'immagine" }, { status: 500 })
   }
 }
-

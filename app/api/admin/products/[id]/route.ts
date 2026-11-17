@@ -1,21 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { parseProductInput } from '@/lib/product-input'
+import { requireAdmin } from '@/lib/require-admin'
+import { logSecurityEvent } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+type Params = { params: Promise<{ id: string }> }
 
 function parseId(raw: string): number | null {
   const id = Number.parseInt(raw, 10)
   return Number.isFinite(id) && id > 0 ? id : null
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: Params) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
-    const id = parseId(params.id)
+    const id = parseId((await params).id)
     if (id === null) {
       return NextResponse.json({ error: 'ID prodotto non valido' }, { status: 400 })
     }
@@ -51,13 +59,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
 
-    const id = parseId(params.id)
+    const id = parseId((await params).id)
     if (id === null) {
       return NextResponse.json({ error: 'ID prodotto non valido' }, { status: 400 })
     }
@@ -67,6 +78,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       // Il prodotto compare in ordini già registrati: disattivarlo lo toglie
       // dalla vetrina senza cancellare lo storico delle vendite.
       await prisma.product.update({ where: { id }, data: { isActive: false } })
+      await logSecurityEvent('admin_delete', request, `prodotto ${id} (archiviato)`)
       return NextResponse.json({
         success: true,
         archived: true,
@@ -76,6 +88,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     }
 
     await prisma.product.delete({ where: { id } })
+    await logSecurityEvent('admin_delete', request, `prodotto ${id}`)
     return NextResponse.json({ success: true, archived: false })
   } catch (error) {
     console.error('Error deleting product:', error)

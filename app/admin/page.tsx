@@ -2,13 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, Image as ImageIcon, FileText, PlusSquare, ShoppingBag, Receipt } from 'lucide-react'
+import { LogOut, Image as ImageIcon, FileText, PlusSquare, ShoppingBag, Receipt, ShieldAlert, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { checkAdminSession, adminLogout } from '@/lib/admin-session'
 
 export default function AdminPanel() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [securityAlert, setSecurityAlert] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    fetch('/api/admin/security', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setSecurityAlert(Boolean(data?.alert)))
+      .catch(() => {})
+  }, [isAuthenticated])
 
   useEffect(() => {
     let cancelled = false
@@ -51,7 +60,29 @@ export default function AdminPanel() {
           </button>
         </div>
 
+        {securityAlert && (
+          <Link
+            href="/admin/sicurezza"
+            className="mb-6 flex items-center gap-3 rounded-lg bg-red-100 p-4 text-red-900 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200"
+          >
+            <ShieldAlert className="shrink-0" />
+            <span>
+              <strong>Attività sospetta rilevata</strong> (accessi falliti o blocchi automatici). Tocca per vedere il registro.
+            </span>
+          </Link>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link
+            href="/admin/sicurezza"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+          >
+            <Shield size={48} className="text-slate-700 dark:text-slate-300 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Sicurezza</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Registro degli accessi al pannello e dei blocchi automatici.
+            </p>
+          </Link>
           <Link
             href="/admin/images"
             className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"

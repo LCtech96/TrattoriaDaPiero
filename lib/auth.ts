@@ -12,7 +12,9 @@
 
 export const ADMIN_COOKIE = 'admin_session'
 const SESSION_TTL_SECONDS = 60 * 60 * 8 // 8 ore
-const PBKDF2_ITERATIONS = 210_000
+// 600.000 iterazioni: raccomandazione OWASP attuale per PBKDF2-HMAC-SHA256.
+// Gli hash creati con meno iterazioni restano validi (il numero è salvato nell'hash).
+const PBKDF2_ITERATIONS = 600_000
 
 const encoder = new TextEncoder()
 

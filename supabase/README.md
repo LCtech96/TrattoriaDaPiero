@@ -7,6 +7,8 @@ Apri Supabase → **SQL Editor** → **New query**, incolla ed esegui:
 0. `00-diagnostica.sql` — *facoltativo*: mostra cosa c'è già nel database. Non modifica niente.
 1. `01-ecommerce-tables.sql` — crea le tabelle `Product`, `Order`, `OrderItem`, `Payment`.
 2. `02-security-fixes.sql` — chiude le vulnerabilità segnalate via email dal Security Advisor.
+3. `03-security-tables.sql` — *non serve lanciarlo*: le tabelle di rate limit e
+   registro eventi le crea il sito da solo. È qui come documentazione.
 
 Gli script sono idempotenti: rilanciarli non causa danni.
 

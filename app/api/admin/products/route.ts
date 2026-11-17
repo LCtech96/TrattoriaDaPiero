@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { parseProductInput } from '@/lib/product-input'
+import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
-// L'accesso è già filtrato dal middleware: qui arriva solo l'admin autenticato.
+// Accesso filtrato dal middleware e ricontrollato qui (requireAdmin).
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
@@ -22,6 +27,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin(request)
+  if (denied) return denied
+
   try {
     if (!prisma) {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })

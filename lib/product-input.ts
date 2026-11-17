@@ -1,4 +1,7 @@
 import { parsePriceToCents, slugify } from '@/lib/ecommerce'
+import { validateImage } from '@/lib/image-validation'
+
+const MAX_GALLERY_IMAGES = 10
 
 export interface ProductInput {
   name: string
@@ -81,7 +84,7 @@ export function parseProductInput(
       data.comparePriceCents = null
     } else {
       const cents = parsePriceToCents(raw)
-      if (cents === null || cents < 0) return { error: 'Prezzo barrato non valido' }
+      if (cents === null || cents < 0 || cents > 100_000_00) return { error: 'Prezzo barrato non valido' }
       data.comparePriceCents = cents
     }
   }
@@ -89,11 +92,20 @@ export function parseProductInput(
   if (!partial || body.stock !== undefined) {
     const stock = asInteger(body.stock, 0)
     if (stock < 0) return { error: 'La quantità non può essere negativa' }
+    if (stock > 1_000_000) return { error: 'Quantità troppo alta' }
     data.stock = stock
   }
 
-  if (!partial || body.unit !== undefined) data.unit = asOptionalString(body.unit)
-  if (!partial || body.sku !== undefined) data.sku = asOptionalString(body.sku)
+  if (!partial || body.unit !== undefined) {
+    const unit = asOptionalString(body.unit)
+    if (unit && unit.length > 60) return { error: 'La misura/formato non può superare i 60 caratteri' }
+    data.unit = unit
+  }
+  if (!partial || body.sku !== undefined) {
+    const sku = asOptionalString(body.sku)
+    if (sku && sku.length > 100) return { error: 'Il codice SKU non può superare i 100 caratteri' }
+    data.sku = sku
+  }
 
   if (!partial || body.weightGrams !== undefined) {
     const raw = asString(body.weightGrams)
@@ -101,21 +113,36 @@ export function parseProductInput(
       data.weightGrams = null
     } else {
       const grams = asInteger(body.weightGrams, -1)
-      if (grams < 0) return { error: 'Peso non valido' }
+      if (grams < 0 || grams > 1_000_000) return { error: 'Peso non valido' }
       data.weightGrams = grams
     }
   }
 
   if (!partial || body.category !== undefined) {
-    data.category = asString(body.category) || 'Prodotti'
+    const category = asString(body.category) || 'Prodotti'
+    if (category.length > 80) return { error: 'La categoria non può superare gli 80 caratteri' }
+    data.category = category
   }
 
-  if (!partial || body.imageUrl !== undefined) data.imageUrl = asOptionalString(body.imageUrl)
+  if (!partial || body.imageUrl !== undefined) {
+    const image = validateImage(body.imageUrl, { optional: true })
+    if (!image.ok) return { error: image.error }
+    data.imageUrl = image.value
+  }
 
   if (!partial || body.images !== undefined) {
-    const images = Array.isArray(body.images)
-      ? body.images.filter((img): img is string => typeof img === 'string' && img.trim() !== '')
+    const raw = Array.isArray(body.images)
+      ? body.images.filter((img) => typeof img === 'string' && img.trim() !== '')
       : []
+    if (raw.length > MAX_GALLERY_IMAGES) {
+      return { error: `Massimo ${MAX_GALLERY_IMAGES} immagini per prodotto` }
+    }
+    const images: string[] = []
+    for (const img of raw) {
+      const image = validateImage(img)
+      if (!image.ok) return { error: image.error }
+      images.push(image.value!)
+    }
     data.images = images
   }
 
