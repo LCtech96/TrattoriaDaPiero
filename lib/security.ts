@@ -57,6 +57,12 @@ async function ensureTables(): Promise<boolean> {
   if (!tablesReady) {
     tablesReady = (async () => {
       try {
+        // Controllo leggero: se le tabelle ci sono già non si tocca nulla
+        // (i comandi DDL prendono lock e non vanno ripetuti a ogni avvio).
+        const [row]: { rate: string | null; events: string | null }[] = await prisma.$queryRaw`
+          SELECT to_regclass('public."RateLimit"')::text AS rate,
+                 to_regclass('public."SecurityEvent"')::text AS events`
+        if (row?.rate && row?.events) return true
         // Un comando per chiamata: il pooler di Supabase non accetta più comandi insieme.
         for (const statement of DDL) await prisma.$executeRawUnsafe(statement)
         return true
