@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cachedJson, purgePublicCache } from '@/lib/public-cache'
 import { requireAdmin } from '@/lib/require-admin'
 import { validateImage } from '@/lib/image-validation'
 import { logSecurityEvent } from '@/lib/security'
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
       where: { key: `${type}_image` },
       select: { value: true },
     })
-    return NextResponse.json({ imageUrl: content?.value || null })
+    return cachedJson({ imageUrl: content?.value || null }, 'general-images')
   } catch (error) {
     console.error('Error fetching general image:', error)
     return NextResponse.json({ error: "Errore nel recupero dell'immagine" }, { status: 500 })
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
       create: { key, value: image.value!, type: 'image' },
       select: { key: true, value: true },
     })
+    await purgePublicCache('general-images')
 
     return NextResponse.json({ success: true, imageUrl: content?.value })
   } catch (error) {

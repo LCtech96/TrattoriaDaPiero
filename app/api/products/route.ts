@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cachedJson } from '@/lib/public-cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({ products })
+    return cachedJson({ products }, 'products')
   } catch (error) {
     console.error('Error fetching products:', error)
     return NextResponse.json({ error: 'Errore nel recupero dei prodotti' }, { status: 500 })

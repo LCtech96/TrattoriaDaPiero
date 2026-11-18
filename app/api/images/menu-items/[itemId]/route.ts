@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cachedJson, purgePublicCache } from '@/lib/public-cache'
 import { requireAdmin } from '@/lib/require-admin'
 import { validateImage } from '@/lib/image-validation'
 import { logSecurityEvent } from '@/lib/security'
@@ -29,14 +30,14 @@ export async function GET(_request: NextRequest, { params }: Params) {
       select: { imageUrl: true },
     })
     if (menuItem?.imageUrl) {
-      return NextResponse.json({ imageUrl: menuItem.imageUrl })
+      return cachedJson({ imageUrl: menuItem.imageUrl }, 'menu-images')
     }
 
     const content = await prisma.content.findUnique({
       where: { key: `menu_item_image_${itemId}` },
       select: { value: true },
     })
-    return NextResponse.json({ imageUrl: content?.value || null })
+    return cachedJson({ imageUrl: content?.value || null }, 'menu-images')
   } catch (error) {
     console.error('Error fetching menu item image:', error)
     return NextResponse.json({ error: "Errore nel recupero dell'immagine" }, { status: 500 })
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest, { params }: Params) {
         create: { key, value: image.value!, type: 'image' },
         select: { key: true, value: true },
       })
+      await purgePublicCache('menu-images')
       return NextResponse.json({ success: true, imageUrl: content.value })
     }
 
@@ -83,6 +85,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       data: { imageUrl: image.value },
       select: { id: true, imageUrl: true },
     })
+    await purgePublicCache('menu-images')
     return NextResponse.json({ success: true, imageUrl: updatedItem?.imageUrl })
   } catch (error) {
     console.error('Error saving menu item image:', error)

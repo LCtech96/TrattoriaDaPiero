@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { prisma } from '@/lib/db'
+import { purgePublicCache } from '@/lib/public-cache'
 import { getStripe } from '@/lib/stripe'
 import { logSecurityEvent } from '@/lib/security'
 
@@ -151,4 +152,6 @@ async function markOrderPaid(session: Stripe.Checkout.Session, request: Request)
       },
     })
   })
+  // Il magazzino è cambiato: la vetrina deve mostrare le nuove disponibilità.
+  await purgePublicCache('products')
 }

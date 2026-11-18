@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cachedJson } from '@/lib/public-cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,7 +37,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       return NextResponse.json({ error: 'Prodotto non trovato' }, { status: 404 })
     }
 
-    return NextResponse.json({ product })
+    return cachedJson({ product }, 'products')
   } catch (error) {
     console.error('Error fetching product:', error)
     return NextResponse.json({ error: 'Errore nel recupero del prodotto' }, { status: 500 })

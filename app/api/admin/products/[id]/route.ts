@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { purgePublicCache } from '@/lib/public-cache'
 import { parseProductInput } from '@/lib/product-input'
 import { requireAdmin } from '@/lib/require-admin'
 import { logSecurityEvent } from '@/lib/security'
@@ -52,6 +53,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     }
 
     const product = await prisma.product.update({ where: { id }, data })
+    await purgePublicCache('products')
     return NextResponse.json({ product })
   } catch (error) {
     console.error('Error updating product:', error)
@@ -78,6 +80,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
       // Il prodotto compare in ordini già registrati: disattivarlo lo toglie
       // dalla vetrina senza cancellare lo storico delle vendite.
       await prisma.product.update({ where: { id }, data: { isActive: false } })
+      await purgePublicCache('products')
       await logSecurityEvent('admin_delete', request, `prodotto ${id} (archiviato)`)
       return NextResponse.json({
         success: true,
@@ -88,6 +91,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     }
 
     await prisma.product.delete({ where: { id } })
+    await purgePublicCache('products')
     await logSecurityEvent('admin_delete', request, `prodotto ${id}`)
     return NextResponse.json({ success: true, archived: false })
   } catch (error) {

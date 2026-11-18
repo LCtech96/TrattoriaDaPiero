@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { purgePublicCache } from '@/lib/public-cache'
 import { parseProductInput } from '@/lib/product-input'
 import { requireAdmin } from '@/lib/require-admin'
 
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
     const product = await prisma.product.create({
       data: { ...productData, slug },
     })
+    await purgePublicCache('products')
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {

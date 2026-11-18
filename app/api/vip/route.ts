@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cachedJson, purgePublicCache } from '@/lib/public-cache'
 import { requireAdmin } from '@/lib/require-admin'
 import { optionalText, validateImage } from '@/lib/image-validation'
 import { logSecurityEvent } from '@/lib/security'
@@ -13,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
     const vips = await prisma.vip.findMany({ orderBy: { createdAt: 'desc' }, take: 200 })
-    return NextResponse.json(vips)
+    return cachedJson(vips, 'vip')
   } catch (error) {
     console.error('Error fetching VIPs:', error)
     return NextResponse.json({ error: 'Errore nel recupero dei VIP' }, { status: 500 })
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const vip = await prisma.vip.create({ data: { imageUrl: image.value!, title: title.value } })
+    await purgePublicCache('vip')
     return NextResponse.json(vip)
   } catch (error) {
     console.error('Error creating VIP:', error)

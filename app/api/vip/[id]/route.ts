@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { purgePublicCache } from '@/lib/public-cache'
 import { requireAdmin } from '@/lib/require-admin'
 import { optionalText, validateImage } from '@/lib/image-validation'
 import { logSecurityEvent } from '@/lib/security'
@@ -28,6 +29,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     }
 
     await prisma.vip.delete({ where: { id } })
+    await purgePublicCache('vip')
     await logSecurityEvent('admin_delete', request, `vip ${id}`)
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -76,6 +78,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     }
 
     const vip = await prisma.vip.update({ where: { id }, data })
+    await purgePublicCache('vip')
     return NextResponse.json(vip)
   } catch (error) {
     console.error('Error updating VIP:', error)

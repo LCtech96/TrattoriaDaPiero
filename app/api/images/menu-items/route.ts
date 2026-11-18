@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cachedJson } from '@/lib/public-cache'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -28,10 +29,7 @@ export async function GET() {
     }
     for (const row of fromMenu as { id: number }[]) ids.add(row.id)
 
-    return NextResponse.json(
-      { ids: Array.from(ids) },
-      { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300' } }
-    )
+    return cachedJson({ ids: Array.from(ids) }, 'menu-images')
   } catch (error) {
     console.error('Error listing menu item images:', error)
     return NextResponse.json({ ids: [] }, { status: 500 })

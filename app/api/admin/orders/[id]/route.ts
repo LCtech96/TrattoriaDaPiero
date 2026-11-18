@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { purgePublicCache } from '@/lib/public-cache'
 import { ORDER_STATUSES, PAYMENT_METHODS, parsePriceToCents } from '@/lib/ecommerce'
 import { requireAdmin } from '@/lib/require-admin'
 import { logSecurityEvent } from '@/lib/security'
@@ -101,6 +102,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           },
         })
       })
+      // Il magazzino è cambiato: la vetrina deve mostrare le nuove disponibilità.
+      await purgePublicCache('products')
       await logSecurityEvent('admin_payment', request, `ordine ${order.orderNumber}: ${method} ${(amountCents / 100).toFixed(2)} ${order.currency}`)
     } else if (Object.keys(data).length > 0) {
       await prisma.order.update({ where: { id }, data })

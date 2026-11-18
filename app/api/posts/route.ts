@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { cachedJson, purgePublicCache } from '@/lib/public-cache'
 import { requireAdmin } from '@/lib/require-admin'
 import { optionalText, validateImage } from '@/lib/image-validation'
 import { logSecurityEvent } from '@/lib/security'
@@ -31,7 +32,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Database non disponibile' }, { status: 503 })
     }
     const posts: PostRow[] = await prisma.post.findMany({ orderBy: { createdAt: 'desc' }, take: 50, select })
-    return NextResponse.json({ posts: posts.map(toJson) })
+    return cachedJson({ posts: posts.map(toJson) }, 'posts')
   } catch (error) {
     console.error('Error fetching posts:', error)
     return NextResponse.json({ error: 'Errore nel recupero dei post' }, { status: 500 })
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
       data: { imageUrl: image.value!, description: description.value, title: title.value },
       select,
     })
+    await purgePublicCache('posts')
     return NextResponse.json({ success: true, post: toJson(post) })
   } catch (error) {
     console.error('Error creating post:', error)
@@ -95,6 +97,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await prisma.post.delete({ where: { id } })
+    await purgePublicCache('posts')
     await logSecurityEvent('admin_delete', request, `post ${id}`)
     return NextResponse.json({ success: true })
   } catch (error) {
